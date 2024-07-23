@@ -1,23 +1,17 @@
 ﻿using CardGameConsoleApp.Deck.Card.Colour;
 using CardGameConsoleApp.Deck.Randomizer;
-using CardGameConsoleApp.Extensions;
 using CardGameConsoleApp.Deck.Card;
 
 namespace CardGameConsoleApp.Deck;
 
 internal sealed class CardDeckBuilder
 {
-	private IRandomizer randomizer = DefaultRandomizer.Instance;
+	private IRandomizer randomizer = IRandomizer.Default;
 	private DeckOptions options = DeckOptions.Default;
 
 	public CardDeckBuilder WithCustomDeckOptions(DeckOptions _options)
 	{
 		options = _options;
-		return this;
-	}
-	public CardDeckBuilder WithColourSet(IColourSet _set)
-	{
-		throw new NotImplementedException();
 		return this;
 	}
 	public CardDeckBuilder WithCustomRandomizeOptions(IRandomizer _randomizer)

@@ -44,37 +44,41 @@ internal static class DeckFactory
 			new CardDescriptionBuilder(CardType.Numeric, new RGBColour(255, 0, 255));
 		var _yellowNumericDescription = _yellowNumericCardsBuilder
 			.WithZero(1).WithOne(2)
-			.WithThree(2).WithFour(2)
-			.WithFive(2).WithSix(2)
-			.WithSeven(2).WithEight(2)
-			.WithNine(2).Build();
+			.WithTwo(2).WithThree(2)
+			.WithFour(2).WithFive(2)
+			.WithSix(2).WithSeven(2)
+			.WithEight(2).WithNine(2)
+			.Build();
 
 		var _blueNumericCardsBuilder = 
 			new CardDescriptionBuilder(CardType.Numeric, new RGBColour(0, 0, 255));
 		var _blueNumericDescription = _blueNumericCardsBuilder
 			.WithZero(1).WithOne(2)
-			.WithThree(2).WithFour(2)
-			.WithFive(2).WithSix(2)
-			.WithSeven(2).WithEight(2)
-			.WithNine(2).Build();
+			.WithTwo(2).WithThree(2)
+			.WithFour(2).WithFive(2)
+			.WithSix(2).WithSeven(2)
+			.WithEight(2).WithNine(2)
+			.Build();
 
 		var _redNumericCardsBuilder = 
 			new CardDescriptionBuilder(CardType.Numeric, new RGBColour(255, 0, 0));
 		var _redNumericDescription = _redNumericCardsBuilder
 			.WithZero(1).WithOne(2)
-			.WithThree(2).WithFour(2)
-			.WithFive(2).WithSix(2)
-			.WithSeven(2).WithEight(2)
-			.WithNine(2).Build();
+			.WithTwo(2).WithThree(2)
+			.WithFour(2).WithFive(2)
+			.WithSix(2).WithSeven(2)
+			.WithEight(2).WithNine(2)
+			.Build();
 
 		var _greenNumericCardsBuilder = 
 			new CardDescriptionBuilder(CardType.Numeric, new RGBColour(255, 255, 0));
 		var _greenNumericDescription = _greenNumericCardsBuilder
 			.WithZero(1).WithOne(2)
-			.WithThree(2).WithFour(2)
-			.WithFive(2).WithSix(2)
-			.WithSeven(2).WithEight(2)
-			.WithNine(2).Build();
+			.WithTwo(2).WithThree(2)
+			.WithFour(2).WithFive(2)
+			.WithSix(2).WithSeven(2)
+			.WithEight(2).WithNine(2)
+			.Build();
 
 		return new DeckDescription([_yellowNumericDescription, _blueNumericDescription, _redNumericDescription, _greenNumericDescription]);
 	}

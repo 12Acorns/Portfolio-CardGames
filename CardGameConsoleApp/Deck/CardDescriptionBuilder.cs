@@ -148,7 +148,7 @@ internal sealed class CardDescriptionBuilder
 
 	public CardDescription Build()
 	{
-		return new CardDescription(type, CardColour.None, cardCountPerSubType);
+		return new CardDescription(type, colour, cardCountPerSubType);
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -1,8 +1,10 @@
-﻿namespace CardGameConsoleApp.Deck.Card;
+﻿using CardGameConsoleApp.Deck.Card.Colour;
+
+namespace CardGameConsoleApp.Deck.Card;
 
 internal record CardDescription
 {
-	public CardDescription(CardType _type, CardColour _colour, Dictionary<CardSubType, byte> _cardCountMapping)
+	public CardDescription(CardType _type, IColourSet _colour, Dictionary<CardSubType, byte> _cardCountMapping)
 	{
 		Type = _type;
 		Colour = _colour;
@@ -11,7 +13,7 @@ internal record CardDescription
 	}
 
 	public CardType Type { get; }
-	public CardColour Colour { get; }
+	public IColourSet Colour { get; }
 	public IReadOnlyDictionary<CardSubType, byte> CardCountMapping { get; }
 	public int TotalCount { get; }
 }

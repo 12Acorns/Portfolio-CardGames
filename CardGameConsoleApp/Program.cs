@@ -1,12 +1,11 @@
-﻿
+﻿using CardGameConsoleApp.Deck.Randomizer;
 using CardGameConsoleApp.Deck.Card;
 using CardGameConsoleApp.Deck;
-using CardGameConsoleApp.Deck.Randomizer;
 
 var _deck =
 	new CardDeckBuilder()
+		.WithCustomRandomizeOptions(IRandomizer.None)
 		.WithCustomDeckOptions(DeckOptions.Default)
-		.WithCustomRandomizeOptions(new NoRandomizer())
 		.Build();
 
 int _sum = 0;
@@ -17,9 +16,7 @@ while(_deck.RemainingCards >= 1)
 		_sum += _deck.Peek().Data.Score;
 	}
 
-	Console.WriteLine(_deck.RemainingCards);
 	Console.WriteLine(Print(ref _deck));
-	Console.WriteLine(_deck.RemainingCards);
 }
 
 Console.WriteLine("Sum: {0}", _sum);
