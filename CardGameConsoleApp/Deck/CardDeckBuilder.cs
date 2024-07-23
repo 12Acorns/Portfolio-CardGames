@@ -1,10 +1,13 @@
-﻿using CardGameConsoleApp.Extensions;
+﻿using CardGameConsoleApp.Deck.Card.Colour;
+using CardGameConsoleApp.Deck.Randomizer;
+using CardGameConsoleApp.Extensions;
 using CardGameConsoleApp.Deck.Card;
 
 namespace CardGameConsoleApp.Deck;
 
 internal sealed class CardDeckBuilder
 {
+	private IRandomizer randomizer = DefaultRandomizer.Instance;
 	private DeckOptions options = DeckOptions.Default;
 
 	public CardDeckBuilder WithCustomDeckOptions(DeckOptions _options)
@@ -12,16 +15,31 @@ internal sealed class CardDeckBuilder
 		options = _options;
 		return this;
 	}
+	public CardDeckBuilder WithColourSet(IColourSet _set)
+	{
+		throw new NotImplementedException();
+		return this;
+	}
+	public CardDeckBuilder WithCustomRandomizeOptions(IRandomizer _randomizer)
+	{
+		randomizer = _randomizer;
+		return this;
+	}
 	public CardDeck Build()
 	{
 		var _cards = CreateCards();
+		RandomizeCards(_cards);
 
-		return new CardDeck();
+		return new CardDeck(_cards);
 	}
 
-	private ReadOnlySpan<ICard> CreateCards()
+	private void RandomizeCards(Span<GameCard> _cards)
 	{
-		var _cards = new ICard[options.TotalCards].AsSpan();
+		randomizer.Randomize(_cards);
+	}
+	private Span<GameCard> CreateCards()
+	{
+		var _cards = new GameCard[options.TotalCards].AsSpan();
 
 		var _specialCardOptions = options.SpecialDeckOptions;
 		var _numericCardOptions = options.NumericDeckOptions;
@@ -32,53 +50,49 @@ internal sealed class CardDeckBuilder
 		return _cards;
 	}
 
-	private static void CreateNumericCards(int _initialIndex, GeneralDeckOptions _numericDeckOptions,
-		Span<ICard> _source, out int _endIndex)
+	private static void CreateNumericCards(int _initialIndex, DeckDescription _deckOptions,
+		Span<GameCard> _source, out int _endIndex)
 	{
-		CreateCardOfType(CardType.Numeric, _initialIndex, _numericDeckOptions, _source, out _endIndex);
+		CreateCardOfType(_source, _initialIndex, _deckOptions, CardSubType.Zero, out _endIndex);
+		CreateCardOfType(_source, _endIndex, _deckOptions, CardSubType.One, out _endIndex);
+		CreateCardOfType(_source, _endIndex, _deckOptions, CardSubType.Two, out _endIndex);
+		CreateCardOfType(_source, _endIndex, _deckOptions, CardSubType.Three, out _endIndex);
+		CreateCardOfType(_source, _endIndex, _deckOptions, CardSubType.Four, out _endIndex);
+		CreateCardOfType(_source, _endIndex, _deckOptions, CardSubType.Five, out _endIndex);
+		CreateCardOfType(_source, _endIndex, _deckOptions, CardSubType.Six, out _endIndex);
+		CreateCardOfType(_source, _endIndex, _deckOptions, CardSubType.Seven, out _endIndex);
+		CreateCardOfType(_source, _endIndex, _deckOptions, CardSubType.Eight, out _endIndex);
+		CreateCardOfType(_source, _endIndex, _deckOptions, CardSubType.Nine, out _endIndex);
 	}
-	private static void CreateSpecialCards(int _initialIndex, GeneralDeckOptions _specialDeckOptions,
-		Span<ICard> _source, out int _endIndex)
+	private static void CreateSpecialCards(int _initialIndex, DeckDescription _description,
+		Span<GameCard> _source, out int _endIndex)
 	{
-		CreateCardOfType(CardType.PlusTwo, _initialIndex, _specialDeckOptions, _source, out int _index);
-		CreateCardOfType(CardType.Reverse, _index, _specialDeckOptions, _source, out _index);
-		CreateCardOfType(CardType.Block, _index, _specialDeckOptions, _source, out _index);
-		CreateCardOfType(CardType.WildColour, _index, _specialDeckOptions, _source, out _index);
-		CreateCardOfType(CardType.WildPlusFour, _index, _specialDeckOptions, _source, out _endIndex);
+		CreateCardOfType(_source, _initialIndex, _description, CardSubType.PlusTwo, out _endIndex);
+		CreateCardOfType(_source, _endIndex, _description, CardSubType.Skip, out _endIndex);
+		CreateCardOfType(_source, _endIndex, _description, CardSubType.Reverse, out _endIndex);
+		CreateCardOfType(_source, _endIndex, _description, CardSubType.Wild, out _endIndex);
+		CreateCardOfType(_source, _endIndex, _description, CardSubType.WildPlusFour, out _endIndex);
 	}
-	private static void CreateCardOfType(CardType _type, int _initialIndex, GeneralDeckOptions _deckOptions,
-		Span<ICard> _source, out int _endIndex)
+	private static void CreateCardOfType(Span<GameCard> _source, int _initialIndex,
+		DeckDescription _deckDescription, CardSubType _type, out int _endIndex)
 	{
-		var _cardColourAndCount = BindColourAndIndex(_type, _deckOptions);
-		CreateCardType(_source, _initialIndex, _type, out _endIndex, _cardColourAndCount);
-	}
-	private static (CardColour _colour, int _count)[] 
-		BindColourAndIndex(CardType _type, GeneralDeckOptions _deckOptions)
-	{
-		var _cardColourAndCounts = new (CardColour _colour, int _count)[_deckOptions.OptionsLength];
-
-		int i = 0;
-		foreach(var _card in _deckOptions.Options)
+		_endIndex = _initialIndex;
+		foreach(var _cardDescription in _deckDescription.CardDescriptions)
 		{
-			_cardColourAndCounts[i] = (_card.Colour, _card.Cards.SumOfCardsOfType(_type));
-			i++;
+			CreateCardType(_source, _endIndex, _cardDescription, _type, out _endIndex);
 		}
-
-		return _cardColourAndCounts;
 	}
-	private static void CreateCardType(Span<ICard> _source, int _offset, CardType _type, 
-		out int _endIndex, (CardColour _colour, int _count)[] _colourLengths)
+	private static void CreateCardType(Span<GameCard> _source, int _offset, CardDescription _description, 
+		CardSubType _subType, out int _endIndex)
 	{
 		_endIndex = _offset;
 
-		for(int i = 0; i < _colourLengths.Length; i++)
+		int _count = _description.CardCountMapping[_subType];
+
+		for(int j = 0; j < _count; j++, _endIndex++)
 		{
-			int _length = _colourLengths[i]._count;
-			for(int j = 0; j < _length; j++, _endIndex++)
-			{
-				_source[_endIndex] = 
-					new SpecialCard(new CardData(_type, _colourLengths[i]._colour));
-			}
+			_source[_endIndex] =
+				new GameCard(_description, new CardData(_subType));
 		}
 	}
 }

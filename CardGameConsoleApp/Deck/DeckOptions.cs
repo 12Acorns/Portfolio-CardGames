@@ -4,10 +4,13 @@ internal readonly record struct DeckOptions
 {
 	public static readonly DeckOptions Default = new();
 
+	/// <summary>
+	/// Creates a default instance
+	/// </summary>
 	public DeckOptions()
 	{
-		SpecialDeckOptions = GeneralDeckOptions.SpecialDefault;
-		NumericDeckOptions = GeneralDeckOptions.NumericDefault;
+		SpecialDeckOptions = DeckDescription.SpecialDefault;
+		NumericDeckOptions = DeckDescription.NumericDefault;
 
 		TotalCards = SpecialDeckOptions.TotalCards + NumericDeckOptions.TotalCards;
 
@@ -16,8 +19,8 @@ internal readonly record struct DeckOptions
 	}
 
 	public DeckOptions(
-		GeneralDeckOptions _specialDeckOptions,
-		GeneralDeckOptions _numericDeckOptions)
+		DeckDescription _specialDeckOptions,
+		DeckDescription _numericDeckOptions)
 	{
 		SpecialDeckOptions = _specialDeckOptions;
 		NumericDeckOptions = _numericDeckOptions;
@@ -40,6 +43,6 @@ internal readonly record struct DeckOptions
 	public bool HasNumericCards { get; }
 
 	public int TotalCards { get; }
-	public GeneralDeckOptions SpecialDeckOptions { get; }
-	public GeneralDeckOptions NumericDeckOptions { get; }
+	public DeckDescription SpecialDeckOptions { get; }
+	public DeckDescription NumericDeckOptions { get; }
 }

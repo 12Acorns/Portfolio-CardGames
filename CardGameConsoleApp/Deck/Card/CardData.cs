@@ -1,13 +1,18 @@
-﻿namespace CardGameConsoleApp.Deck.Card;
+﻿using CardGameConsoleApp.Extensions;
 
-internal record CardData
+namespace CardGameConsoleApp.Deck.Card;
+
+internal readonly struct CardData
 {
-    public CardData(CardType _type, CardColour _colour)
-    {
-        Type = _type;
-        Colour = _colour;
-    }
+	public CardData(CardSubType _subType)
+	{
+		SubType = _subType;
+		Score = SubType.MapToScore();
+	}
 
-    public CardType Type { get; }
-    public CardColour Colour { get; }
+	/// <summary>
+	/// Used to also represent value to player, handle special type values by showing none
+	/// </summary>
+	public byte Score { get; }
+	public CardSubType SubType { get; }
 }

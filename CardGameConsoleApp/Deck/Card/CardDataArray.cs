@@ -2,7 +2,7 @@
 
 internal readonly struct CardDataArray
 {
-	public CardDataArray(CardColour _colour, IEnumerable<CardData> _cards)
+	public CardDataArray(CardColour _colour, IEnumerable<CardDescription> _cards)
 	{
 		Colour = _colour;
 		if(!Enumerable.All(_cards, x => x.Colour == _colour))
@@ -12,7 +12,7 @@ internal readonly struct CardDataArray
 		Cards = _cards;
 		TotalCards = Cards.Count();
 	}
-	public CardDataArray(CardColour _colour, CardData[] _cards)
+	public CardDataArray(CardColour _colour, CardDescription[] _cards)
 	{
 		Colour = _colour;
 
@@ -26,5 +26,5 @@ internal readonly struct CardDataArray
 
 	public int TotalCards { get; }
 	public CardColour Colour { get; }
-	public IEnumerable<CardData> Cards { get; }
+	public IEnumerable<CardDescription> Cards { get; }
 }

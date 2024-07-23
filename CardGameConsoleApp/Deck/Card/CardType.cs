@@ -1,12 +1,7 @@
 ﻿namespace CardGameConsoleApp.Deck.Card;
 
-public enum CardType
+public enum CardType : byte
 {
 	Numeric,
-	Special,
-	WildColour,
-	WildPlusFour,
-	PlusTwo,
-	Block,
-	Reverse
+	Special
 }
