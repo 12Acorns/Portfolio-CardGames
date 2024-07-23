@@ -2,5 +2,5 @@
 
 internal interface IColourSet
 {
-	public RGBColour[] GetColours();
+	public IEnumerable<RGBColour> GetColours();
 }

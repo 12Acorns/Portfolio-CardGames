@@ -9,8 +9,8 @@ internal readonly record struct DeckOptions
 	/// </summary>
 	public DeckOptions()
 	{
-		SpecialDeckOptions = DeckDescription.SpecialDefault;
-		NumericDeckOptions = DeckDescription.NumericDefault;
+		SpecialDeckOptions = DeckFactory.GetDefaultSpecialDescription();
+		NumericDeckOptions = DeckFactory.GetDefaultNumericDescription();
 
 		TotalCards = SpecialDeckOptions.TotalCards + NumericDeckOptions.TotalCards;
 

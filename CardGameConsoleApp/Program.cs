@@ -1,10 +1,12 @@
 ﻿
 using CardGameConsoleApp.Deck.Card;
 using CardGameConsoleApp.Deck;
+using CardGameConsoleApp.Deck.Randomizer;
 
 var _deck =
 	new CardDeckBuilder()
 		.WithCustomDeckOptions(DeckOptions.Default)
+		.WithCustomRandomizeOptions(new NoRandomizer())
 		.Build();
 
 int _sum = 0;
