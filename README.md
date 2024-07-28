@@ -1,3 +1,5 @@
+![Build Success](https://github.com/12Acorns/Portfolio-CardGameConsoleApp/actions/workflows/dotnet.yml/badge.svg)
+
 ## Download
 1) Copy project
 2) Open in desired IDE/Code Editor
