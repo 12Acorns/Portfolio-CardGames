@@ -3,12 +3,16 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.10.35013.160
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CardGameConsoleApp", "CardGameConsoleApp\CardGameConsoleApp.csproj", "{B8F87B30-611F-4697-A1F3-A258C5F042C2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "App", "CardGameConsoleApp\App.csproj", "{B8F87B30-611F-4697-A1F3-A258C5F042C2}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{1090EF6A-24A4-440A-AAAD-69660C639CF7}"
 	ProjectSection(SolutionItems) = preProject
 		.editorconfig = .editorconfig
 	EndProjectSection
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Deck", "CardDeck\Deck.csproj", "{8ACF25A2-2B07-4DCC-95B9-48C8CA4526B8}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GameOne", "GameOne\GameOne.csproj", "{025A33DA-6E2F-4516-801E-B182FD9C264F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -20,6 +24,14 @@ Global
 		{B8F87B30-611F-4697-A1F3-A258C5F042C2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B8F87B30-611F-4697-A1F3-A258C5F042C2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B8F87B30-611F-4697-A1F3-A258C5F042C2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8ACF25A2-2B07-4DCC-95B9-48C8CA4526B8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8ACF25A2-2B07-4DCC-95B9-48C8CA4526B8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8ACF25A2-2B07-4DCC-95B9-48C8CA4526B8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8ACF25A2-2B07-4DCC-95B9-48C8CA4526B8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{025A33DA-6E2F-4516-801E-B182FD9C264F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{025A33DA-6E2F-4516-801E-B182FD9C264F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{025A33DA-6E2F-4516-801E-B182FD9C264F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{025A33DA-6E2F-4516-801E-B182FD9C264F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
