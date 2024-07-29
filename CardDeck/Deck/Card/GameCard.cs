@@ -1,6 +1,6 @@
 ﻿namespace Deck.Deck.Card;
 
-public struct GameCard
+public record struct GameCard
 {
 	public GameCard(CardDescription _description, CardData _data)
 	{
@@ -32,7 +32,7 @@ public struct GameCard
 	/// <summary>
 	/// Description of the card group
 	/// </summary>
-	public readonly CardDescription Description { get; }
+	public CardDescription Description { get; set; }
 	/// <summary>
 	/// Data of this card
 	/// </summary>

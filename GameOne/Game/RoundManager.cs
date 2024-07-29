@@ -1,13 +1,14 @@
 ﻿using System.Runtime.CompilerServices;
+using Deck.Deck.Card.Colour;
 using Deck.Deck.Randomizer;
 using GameOne._Player;
+using Deck.Extensions;
 using Deck.Deck.Card;
 using Deck.Deck;
-using Deck.Extensions;
 
 namespace GameOne.Game;
 
-public sealed class RoundManager
+internal sealed class RoundManager
 {
 	public RoundManager(CardDeck _deck, int _playerCount, int _startingCards)
 	{
@@ -38,6 +39,8 @@ public sealed class RoundManager
 		}
 	}
 
+	public Action<Player> OnPlay { get; set; } = new(x => { });
+	public bool GameOver { get; private set; } = false;
 	public Player CurrentPlayer { get; private set; }
 	public Player NonAI { get; private set; }
 
@@ -48,6 +51,17 @@ public sealed class RoundManager
 	private readonly byte playersLength;
 	private byte playerIndex;
 
+	private int skipPlayerCount;
+	private bool reverseOrder;
+
+	public void OnWin(Player _player)
+	{
+		if(_player.Cards.Length != 0)
+		{
+			return;
+		}
+		GameOver = true;
+	}
 	public ReadOnlySpan<GameCard> GetMultipleCards(int _amount)
 	{
 		var _cards = new GameCard[_amount];
@@ -74,6 +88,25 @@ public sealed class RoundManager
 
 		return _card;
 	}
+	public void SkipPlayer()
+	{
+		if(PeekDiscardPileTopCard().Data.SubType is not CardSubType.PlusTwo)
+		{
+			return;
+		}
+
+		skipPlayerCount++;
+	}
+	public void SetWildColour(IColour _colour)
+	{
+		var _card = DiscardPile.Peek();
+		if(_card.Data.SubType is not CardSubType.Wild or CardSubType.WildPlusFour)
+		{
+			return;
+		}
+
+		_card.Description = _card.Description with { Colour = _colour };
+	}
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public GameCard PeekDiscardPileTopCard() => 
 		DiscardPile.Peek();
@@ -91,23 +124,99 @@ public sealed class RoundManager
 	}
 	public bool AddToDiscard(GameCard _card)
 	{
-		_card.PutDown();
-
-		if(!_card.CanPlay(DiscardPile))
+		if(!_card.CanPlay(DiscardPile, false))
 		{
 			return false;
 		}
 
+		_card.PutDown();
+
 		DiscardPile.Add(_card);
 		return true;
 	}
+	/// <summary>
+	/// Returns current player and increments player handle
+	/// </summary>
+	/// <returns></returns>
 	public Player NextPlayer()
 	{
-		var _player = CurrentPlayer!;
-		playerIndex = (byte)((playerIndex + 1) % playersLength);
-		CurrentPlayer = players![playerIndex];
+		var _player = CurrentPlayer;
+		if(reverseOrder)
+		{
+			var _minus = playerIndex - 1;
+			if(_minus < 0)
+			{
+				_minus = playersLength - 1;
+			}
+			playerIndex = (byte)(_minus % playersLength);
+		}
+		else
+		{
+			playerIndex = (byte)((playerIndex + 1) % playersLength);
+		}
+		CurrentPlayer = players[playerIndex];
+
+		if(skipPlayerCount > 0)
+		{
+			skipPlayerCount++;
+			_player = NextPlayer();
+		}
 
 		return _player;
+	}
+	public Player PeekPlayer(int _offset)
+	{
+		int _index;
+		if(reverseOrder)
+		{
+			var _minus = playerIndex - _offset;
+			while(_minus < 0)
+			{
+				_minus = playersLength + _minus;
+			}
+			_index = (byte)(_minus % playersLength);
+		}
+		else
+		{
+			_index = (byte)((playerIndex + _offset) % playersLength);
+		}
+		return players[_index];
+	}
+	public bool ExecuteCardBehaviour(GameCard _card)
+	{
+		var _subType = _card.Data.SubType;
+
+		if(_subType.IsNumercic())
+		{
+			return false;
+		}
+
+		switch(_subType)
+		{
+			case CardSubType.PlusTwo:
+				var _nextPlayer = PeekPlayer(1);
+				_nextPlayer.GiveCard(GetTopCard());
+				SkipPlayer();
+				return false;
+			case CardSubType.Skip:
+				SkipPlayer();
+				return false;
+			case CardSubType.Reverse:
+				reverseOrder = !reverseOrder;
+				return false;
+			case CardSubType.Wild:
+				return true;
+			case CardSubType.WildPlusFour:
+				_nextPlayer = PeekPlayer(1);
+				_nextPlayer.GiveCard(GetTopCard());
+				_nextPlayer.GiveCard(GetTopCard());
+				_nextPlayer.GiveCard(GetTopCard());
+				_nextPlayer.GiveCard(GetTopCard());
+				SkipPlayer();
+				return true;
+			default:
+				throw new NotSupportedException(nameof(_subType) + " is not a supported type");
+		}
 	}
 	private void Shuffle()
 	{

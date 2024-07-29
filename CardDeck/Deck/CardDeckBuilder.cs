@@ -1,6 +1,5 @@
 ﻿using Deck.Deck.Randomizer;
 using Deck.Deck.Card;
-using Deck.Extensions;
 
 namespace Deck.Deck;
 
@@ -83,7 +82,7 @@ public sealed class CardDeckBuilder
 		for(int j = 0; j < _count; j++, _endIndex++)
 		{
 			_source[_endIndex] =
-				new GameCard(_description, new CardData(_subType, _subType.BindBehaviour()));
+				new GameCard(_description, new CardData(_subType));
 		}
 	}
 }

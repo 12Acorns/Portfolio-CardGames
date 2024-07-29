@@ -1,6 +1,6 @@
 ﻿namespace GameOne._Player;
 
-public enum UserOptions
+public enum UserCardOptions
 {
 	PlayCard,
 	DrawCard,

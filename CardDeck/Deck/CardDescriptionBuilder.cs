@@ -6,8 +6,9 @@ namespace Deck.Deck;
 
 public sealed class CardDescriptionBuilder
 {
-	public CardDescriptionBuilder(CardType _cardType, IColourSet _cardColour)
+	public CardDescriptionBuilder(CardType _cardType, IColourSet _set, IColour _cardColour)
 	{
+		set = _set;
 		type = _cardType;
 		colour = _cardColour;
 
@@ -48,7 +49,8 @@ public sealed class CardDescriptionBuilder
 	}
 
 	private readonly CardType type;
-	private readonly IColourSet colour;
+	private readonly IColourSet set;
+	private readonly IColour colour;
 	private readonly Dictionary<CardSubType, byte> cardCountPerSubType;
 
 	#region Numeric Cards
@@ -148,7 +150,7 @@ public sealed class CardDescriptionBuilder
 
 	public CardDescription Build()
 	{
-		return new CardDescription(type, colour, cardCountPerSubType);
+		return new CardDescription(type, colour, set, cardCountPerSubType);
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]

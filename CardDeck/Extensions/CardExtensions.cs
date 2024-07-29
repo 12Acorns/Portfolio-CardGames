@@ -30,38 +30,6 @@ public static class CardExtensions
 		{ CardSubType.Wild, 50 },
 	};
 
-	public static Action BindBehaviour(this CardSubType _subType)
-	{
-		if(_subType.IsNumercic())
-		{
-			return () => { };
-		}
-
-		return _subType switch
-		{
-			CardSubType.PlusTwo => () =>
-			{
-
-			},
-			CardSubType.Skip => () =>
-			{
-
-			},
-			CardSubType.Reverse => () =>
-			{
-
-			},
-			CardSubType.Wild => () =>
-			{
-
-			},
-			CardSubType.WildPlusFour => () =>
-			{
-
-			},
-			_ => throw new NotSupportedException(nameof(_subType) + " is not a supported type")
-		};
-	}
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static byte MapToScore(this CardSubType _type) => scoreMappingTable[_type];
 	public static bool CanPlay(this GameCard _card, GameCard _other, bool _strictPlay = true)
@@ -83,28 +51,13 @@ public static class CardExtensions
 			// Wild Card
 			|| _card.Data.SubType is CardSubType.Wild or CardSubType.WildPlusFour;
 	}
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static bool CanPlay(this GameCard _card, CardDeck _deck, bool _strictPlay = true)
 	{
-		var _discardCard = _deck.Peek();
-
-		var _discardDescription = _discardCard.Description;
-		var _desiredDescription = _card.Description;
-		var _discardData = _discardCard.Data;
-		var _desiredData = _card.Data;
-
-		if(_card.InUse && _strictPlay)
-		{
-			return false;
-		}
-
-		// Same Colour
-		return _discardDescription.Colour == _desiredDescription.Colour
-			// Same Sub Type
-			|| _discardData.SubType == _desiredData.SubType
-			// Wild Card
-			|| _card.Data.SubType is CardSubType.Wild or CardSubType.WildPlusFour;
+		return _card.CanPlay(_deck.Peek(), _strictPlay);
 	}
-	private static bool IsNumercic(this CardSubType _subType)
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static bool IsNumercic(this CardSubType _subType)
 	{
 		return _subType is CardSubType.Zero or CardSubType.One
 						or CardSubType.Two or CardSubType.Three

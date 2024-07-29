@@ -4,16 +4,18 @@ namespace Deck.Deck.Card;
 
 public record CardDescription
 {
-	public CardDescription(CardType _type, IColourSet _colour, Dictionary<CardSubType, byte> _cardCountMapping)
+	public CardDescription(CardType _type, IColour _colour, IColourSet _colourSet, Dictionary<CardSubType, byte> _cardCountMapping)
 	{
 		Type = _type;
 		Colour = _colour;
+		ColourSet = _colourSet;
 		CardCountMapping = _cardCountMapping.AsReadOnly();
 		TotalCount = CardCountMapping.Values.Sum(x => x);
 	}
 
 	public CardType Type { get; }
-	public IColourSet Colour { get; }
+	public IColour Colour { get; set; }
+	public IColourSet ColourSet { get; }
 	public IReadOnlyDictionary<CardSubType, byte> CardCountMapping { get; }
 	public int TotalCount { get; }
 }

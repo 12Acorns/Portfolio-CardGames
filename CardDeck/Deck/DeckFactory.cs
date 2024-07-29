@@ -9,25 +9,19 @@ public static class DeckFactory
 	{
 		var _descriptions = new CardDescription[5];
 
-		ReadOnlySpan<RGBColour> _colours =
-		[
-			RGBColour.Yellow,
-			RGBColour.Blue,
-			RGBColour.Red,
-			RGBColour.Green,
-		];
+		ReadOnlySpan<RGBColour> _colours = IColourSet.Default.GetColours().ToArray();
 
-		for(int i = 0; i < _descriptions.Length - 1; i++)
+		for(int i = 0; i < _colours.Length - 1; i++)
 		{
 			var _cardDescriptionBuilder =
-				new CardDescriptionBuilder(CardType.Special, _colours[i]);
+				new CardDescriptionBuilder(CardType.Special, IColourSet.Default, _colours[i]);
 			_descriptions[i] = _cardDescriptionBuilder
 				.WithPlusTwo(2).WithReverse(2)
 				.WithSkip(2).Build();
 		}
 
 		var _wildCardsBuilder =
-			new CardDescriptionBuilder(CardType.Special, RGBColour.Black);
+			new CardDescriptionBuilder(CardType.Special, IColourSet.Default, _colours[^1]);
 		_descriptions[4] = _wildCardsBuilder
 			.WithWild(4).WithWildPlusFour(4)
 			.Build();
@@ -36,20 +30,14 @@ public static class DeckFactory
 	}
 	public static DeckDescription GetDefaultNumericDescription()
 	{
-		var _descriptions = new CardDescription[4];
+		ReadOnlySpan<RGBColour> _colours = IColourSet.Default.GetColours().ToArray();
 
-		ReadOnlySpan<RGBColour> _colours =
-		[
-			RGBColour.Yellow,
-			RGBColour.Blue,
-			RGBColour.Red,
-			RGBColour.Green,
-		];
+		var _descriptions = new CardDescription[_colours.Length - 1];
 
 		for(int i = 0; i < _descriptions.Length; i++)
 		{
 			var _cardDescriptionBuilder =
-				new CardDescriptionBuilder(CardType.Numeric, _colours[i]);
+				new CardDescriptionBuilder(CardType.Numeric, IColourSet.Default, _colours[i]);
 			_descriptions[i] = _cardDescriptionBuilder
 				.WithZero(1).WithOne(2)
 				.WithTwo(2).WithThree(2)

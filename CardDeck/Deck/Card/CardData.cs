@@ -4,11 +4,10 @@ namespace Deck.Deck.Card;
 
 public readonly struct CardData
 {
-	public CardData(CardSubType _subType, Action _behaviour)
+	public CardData(CardSubType _subType)
 	{
 		SubType = _subType;
 		Score = SubType.MapToScore();
-		Behaviour = _behaviour;
 	}
 
 	/// <summary>
@@ -16,5 +15,4 @@ public readonly struct CardData
 	/// </summary>
 	public byte Score { get; }
 	public CardSubType SubType { get; }
-	public Action Behaviour { get; }
 }

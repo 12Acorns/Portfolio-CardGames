@@ -14,6 +14,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Deck", "CardDeck\Deck.cspro
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GameOne", "GameOne\GameOne.csproj", "{025A33DA-6E2F-4516-801E-B182FD9C264F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameLoader", "GameLoader\GameLoader.csproj", "{A96326F4-ACF2-4903-8668-4C9DDD4D2598}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -32,6 +34,10 @@ Global
 		{025A33DA-6E2F-4516-801E-B182FD9C264F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{025A33DA-6E2F-4516-801E-B182FD9C264F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{025A33DA-6E2F-4516-801E-B182FD9C264F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A96326F4-ACF2-4903-8668-4C9DDD4D2598}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A96326F4-ACF2-4903-8668-4C9DDD4D2598}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A96326F4-ACF2-4903-8668-4C9DDD4D2598}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A96326F4-ACF2-4903-8668-4C9DDD4D2598}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

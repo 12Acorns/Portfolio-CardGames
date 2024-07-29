@@ -18,7 +18,24 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\GameOne\GameOne.csproj" />
+    <PackageReference Include="FastEnum" Version="1.8.0" />
   </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\GameLoader\GameLoader.csproj" />
+  </ItemGroup>
+
+  <Target Name="Copy Files" AfterTargets="CoreCompile">
+     <Copy 
+		 SourceFiles="$(SolutionDir)GameOne\$(OutDir)GameOne.dll" 
+		 DestinationFolder="$(TargetDir)Games" 
+		 OverwriteReadOnlyFiles="true" 
+		 SkipUnchangedFiles="false" />
+	 <Copy
+		 SourceFiles="$(SolutionDir)GameOne\$(OutDir)Deck.dll"
+		 DestinationFolder="$(TargetDir)Games"
+		 OverwriteReadOnlyFiles="true"
+		 SkipUnchangedFiles="false" />
+  </Target>
 
 </Project>

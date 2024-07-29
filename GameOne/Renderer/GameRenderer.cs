@@ -3,8 +3,12 @@ using Deck.Deck.Card;
 
 namespace Renderer;
 
-public sealed class GameRenderer
+internal sealed class GameRenderer
 {
+	private const string DISCARDPILE = $"{DOWNARROW} Discard Deck: {DOWNARROW}";
+	private const string PLAYERDECK = $"{DOWNARROW} Your Deck: {DOWNARROW}";
+	private const string DOWNARROW = "\u0019";
+
 	public GameRenderer(Player[] _players, Player _player)
 	{
 		players = _players;
@@ -19,10 +23,10 @@ public sealed class GameRenderer
 		RenderPlayerInfo(_currentPlayer);
 		if(player.IsTurn)
 		{
-			Console.WriteLine("\x19 Your deck: \x19");
+			Console.WriteLine(PLAYERDECK);
 			RenderCard(_currentCard);
 		}
-		Console.WriteLine("\x19 Dicard deck: \x19");
+		Console.WriteLine(DISCARDPILE);
 		RenderCard(_discardCard);
 	}
 

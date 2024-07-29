@@ -2,30 +2,35 @@
 
 namespace Deck.Deck.Card.Colour;
 
-public readonly struct RGBColour : IColourSet
+public readonly struct RGBColour : IColour
 {
-	public static readonly RGBColour White = new(255, 255, 255);
-	public static readonly RGBColour Black = new(0, 0, 0);
-	public static readonly RGBColour Red = new(255, 0, 0);
-	public static readonly RGBColour Green = new(0, 255, 0);
-	public static readonly RGBColour Blue = new(0, 0, 255);
-	public static readonly RGBColour Yellow = new(255, 0, 255);
+	public static readonly RGBColour Default = new();
 
-	public RGBColour(byte _r, byte _g, byte _b)
+	public static readonly RGBColour White = new("White", 255, 255, 255);
+	public static readonly RGBColour Black = new("Black", 0, 0, 0);
+	public static readonly RGBColour Red = new("Red", 255, 0, 0);
+	public static readonly RGBColour Green = new("Green", 0, 255, 0);
+	public static readonly RGBColour Blue = new("Blue", 0, 0, 255);
+	public static readonly RGBColour Yellow = new("Yellow", 255, 0, 255);
+
+	public RGBColour(string _name, byte _r, byte _g, byte _b)
 	{
+		Name = _name;
 		R = _r;
 		G = _g;
 		B = _b;
 	}
+	public RGBColour()
+	{
+		Name = "";
+		HasValue = false;
+	}
 
+	public string Name { get; }
 	public byte R { get; }
 	public byte G { get; }
 	public byte B { get; }
-
-	public IEnumerable<RGBColour> GetColours()
-	{
-		yield return this;
-	}
+	public bool HasValue { get; } = true;
 
 	public static RGBColour GetClassicColour(CardColour _colour) => _colour switch
 	{

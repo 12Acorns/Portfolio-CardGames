@@ -4,10 +4,13 @@ using Deck.Deck;
 using Renderer;
 
 namespace GameOne.Game;
-public sealed class GameManager
+
+internal sealed class GameManager
 {
 	private const int PLAYERS = 4;
 	private const int STARTINGCARDS = 7;
+
+	private static readonly object lockObject = new();
 
 	public GameManager()
 	{
@@ -42,20 +45,11 @@ public sealed class GameManager
 		}
 		playing = true;
 
-		bool _quit = false;
+		var _gameThread = new Thread(Game);
 
-		var _nonAI = manager.NonAI!;
+		_gameThread.Start();
 
-		while(!_quit)
-		{
-			Render(_nonAI);
-
-			manager.CurrentPlayer.Play(Render);
-
-			manager.NextPlayer();
-		}
-
-		playing = false;
+		while(!manager.GameOver) { }
 	}
 	public void Render(Player _player)
 	{
@@ -63,5 +57,21 @@ public sealed class GameManager
 			manager.CurrentPlayer,
 			_player.CurrentCard,
 			manager.PeekDiscardPileTopCard());
+	}
+
+	private void Game()
+	{
+		var _nonAI = manager.NonAI;
+		lock(lockObject)
+		{
+			while(!manager.GameOver)
+			{
+				Render(_nonAI);
+
+				manager.CurrentPlayer.Play(Render);
+
+				manager.NextPlayer();
+			}
+		}
 	}
 }
