@@ -1,11 +1,11 @@
-﻿using System.Reflection;
+﻿using System;
+using System.Reflection;
 using System.Text;
 
 namespace GameLoader;
 
-internal sealed class Logger : IDisposable
+internal sealed class Logger
 {
-	private static readonly SemaphoreSlim lockObj = new(1, 1);
 	private static readonly string path = 
 		Path.Combine(
 		Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
@@ -13,9 +13,9 @@ internal sealed class Logger : IDisposable
 
 	public Logger(string _name, int _size)
 	{
-		bufferSize = _size;
-		buffer = new char[bufferSize];
-		bufferHandle = 0;
+		maxCapacity = _size > 0 ? _size : throw new ArgumentOutOfRangeException(nameof(_size));
+
+		buffer = new StringBuilder(maxCapacity);
 
 		filePath = Path.Combine(path, _name + ".txt");
 
@@ -25,76 +25,59 @@ internal sealed class Logger : IDisposable
 
 	public readonly string filePath;
 
-	private readonly int bufferSize;
-	private readonly char[] buffer;
-	private int bufferHandle;
+	private readonly StringBuilder buffer;
+	private readonly int maxCapacity;
 
-	private bool disposedValue;
-
-	public async void AppendOrLog(string _contents)
+	public void Flush()
 	{
-		await lockObj.WaitAsync();
+		Log();
+	}
+	public void AppendOrLog(string contents)
+	{
+		if(string.IsNullOrEmpty(contents))
+			return;
 
-		var _contentsLength = _contents.Length;
+		var _contentsLength = contents.Length;
+		var _contentsSpan = contents.AsSpan();
 
 		// Buffer full, log contents
-		if(bufferHandle == buffer.Length - 1)
+		if(buffer.Length >= maxCapacity)
 		{
-			await Log(bufferSize);
+			Log();
 		}
 
-		// Trying to append more than supported contents
+		if(_contentsLength <= maxCapacity - buffer.Length)
+		{
+			buffer.Append(_contentsSpan);
+			return;
+		}
 		int _offset = 0;
-		while(bufferHandle - _contentsLength < 0)
+		while(_offset < _contentsLength)
 		{
-			var _bufferHandleStart = bufferHandle;
-			for(; bufferHandle < buffer.Length; bufferHandle++, _contentsLength--)
+			var _availableSpace = maxCapacity - buffer.Length;
+			var lengthToCopy = Math.Min(_availableSpace, _contentsLength - _offset);
+
+			buffer.Append(_contentsSpan.Slice(_offset, lengthToCopy));
+			_offset += lengthToCopy;
+
+			if(buffer.Length >= maxCapacity)
 			{
-				if(_contentsLength == 0)
-				{
-					break;
-				}
-
-				buffer[bufferHandle] = _contents[bufferHandle - _bufferHandleStart + _offset];
+				Log();
 			}
-			await Log(bufferSize - (bufferSize - bufferHandle));
-			_offset += bufferSize - 1;
 		}
-
-		lockObj.Release();
 	}
 
-	private async Task Log(int _size)
+	private void Log()
 	{
-		using var _steam = new FileStream(filePath, FileMode.Append, FileAccess.Write, FileShare.ReadWrite, bufferSize, false);
-
-		var _bytes = Encoding.ASCII.GetBytes(buffer);
-
-		await _steam.WriteAsync(_bytes.AsMemory(0, _size));
-
-		bufferHandle = 0;
-
-		return;
-	}
-
-	private void Dispose(bool disposing)
-	{
-		if(disposedValue)
+		if(buffer.Length == 0)
 		{
 			return;
 		}
-		disposedValue = true;
-		lockObj.Dispose();
-	}
 
-	~Logger()
-	{
-		Dispose(false);
-	}
+		using var _stream = new FileStream(filePath, FileMode.Append, FileAccess.Write, FileShare.ReadWrite);
+		var _bytes = Encoding.ASCII.GetBytes(buffer.ToString());
+		_stream.Write(_bytes, 0, _bytes.Length);
 
-	public void Dispose()
-	{
-		Dispose(true);
-		GC.SuppressFinalize(this);
+		buffer.Clear();
 	}
 }
