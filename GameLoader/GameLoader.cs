@@ -8,15 +8,58 @@ public sealed class GameLoader
 {
 	public GameLoader()
 	{
-		Directory.CreateDirectory(gamesDirectory);
+		using var _logger = new Logger("GameLoaderLog", 4096);
 
-		var _gameAssemblies = Directory.GetFiles(gamesDirectory, "*.dll")
-			 .Select(Assembly.LoadFrom);
+		try
+		{
+			Directory.CreateDirectory(gamesDirectory);
+		}
+		catch(Exception _ex)
+		{
+			_logger.AppendOrLog("\n\nERROR: Could not create directory ->\n    Target Path: " +
+				$"{gamesDirectory}\n    Exception: {_ex.Message}");
 
-		var _assemblies = _gameAssemblies.SelectMany(assembly => assembly.GetTypes());
-		var _assignable = _assemblies.Where(type => typeof(IGame).IsAssignableFrom(type));
+			Console.WriteLine("ERROR");
+			Console.WriteLine($"Log details: {_logger.filePath}");
 
-		games = _assignable.Select(type => (IGame)Activator.CreateInstance(type)!);
+			throw;
+		}
+
+
+		IEnumerable<Assembly> _gameAssemblies = [];
+
+		try
+		{
+			_gameAssemblies = Directory.GetFiles(gamesDirectory, "*.dll")
+				.Select(Assembly.LoadFrom);
+		}
+		catch(Exception _ex)
+		{
+			_logger.AppendOrLog("\n\nERROR: Could not get files ->\n    " + _ex.Message);
+
+			Console.WriteLine("ERROR");
+			Console.WriteLine($"Log details: {_logger.filePath}");
+
+			throw;
+		}
+
+		_logger.AppendOrLog($"Assemblies found:\n" +
+			string.Join('\n', _gameAssemblies.Select(x => "    " + x.GetName().FullName)));
+
+		_logger.AppendOrLog($"\n\nAssembly locations:\n" +
+			string.Join('\n', _gameAssemblies.Select(x => "    " + x.Location)));
+
+		var _types = _gameAssemblies.SelectMany(assembly => assembly.GetTypes());
+
+		_logger.AppendOrLog($"\n\nTypes found:\n" +
+			string.Join('\n', _types.Select(x => $"    {x.FullName}")));
+
+		var _iGameTypes = _types.Where(type => typeof(IGame).IsAssignableFrom(type));
+
+		_logger.AppendOrLog($"\n\nTypes that match {typeof(IGame).Name} found:\n" +
+			string.Join('\n', _iGameTypes.Select(x => $"    {x.FullName}")));
+
+		games = _iGameTypes.Select(type => (IGame)Activator.CreateInstance(type)!);
 		gameNames = games.ToDictionary(x => x.Name, x => x);
 
 		var _builder = new StringBuilder("Enter desired game (Case-Sensitive): \n");
