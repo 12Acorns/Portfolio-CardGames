@@ -26,6 +26,9 @@
   </ItemGroup>
 
   <Target Name="Copy Files" AfterTargets="CoreCompile">
+	  <MSBuild Projects="$(SolutionDir)GameOne\GameOne.csproj"
+			   Targets="Build"
+			   Properties="Configuration=$(Configuration);Platform=$(Platform)" />
      <Copy 
 		 SourceFiles="$(SolutionDir)GameOne\$(OutDir)GameOne.dll" 
 		 DestinationFolder="$(TargetDir)Games" 
