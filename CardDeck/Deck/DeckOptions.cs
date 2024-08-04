@@ -2,34 +2,17 @@
 
 public readonly record struct DeckOptions
 {
-	public static readonly DeckOptions Default = new();
-
-	/// <summary>
-	/// Creates a default instance
-	/// </summary>
-	public DeckOptions()
-	{
-		SpecialDeckOptions = DeckFactory.GetDefaultSpecialDescription();
-		NumericDeckOptions = DeckFactory.GetDefaultNumericDescription();
-
-		TotalCards = SpecialDeckOptions.TotalCards + NumericDeckOptions.TotalCards;
-
-		HasSpecialCards = true;
-		HasNumericCards = true;
-	}
-
 	public DeckOptions(
-		DeckDescription _specialDeckOptions,
-		DeckDescription _numericDeckOptions)
+		CardGroupDescription[] _deckOptions)
 	{
-		SpecialDeckOptions = _specialDeckOptions;
-		NumericDeckOptions = _numericDeckOptions;
-		TotalCards = _specialDeckOptions.TotalCards;
+		GroupOptions = _deckOptions;
+		TotalCards = _deckOptions.Sum(x => x.TotalCards);
 
-		HasSpecialCards = _specialDeckOptions.TotalCards != 0;
-		HasNumericCards = _numericDeckOptions.TotalCards != 0;
+		HasCardTypeMap = _deckOptions
+			.Select(x => x.GroupName)
+			.ToHashSet();
 
-		if(!HasSpecialCards && !HasNumericCards)
+		if(_deckOptions.Length == 0)
 		{
 			throw new Exception("Cannot create a deck with no card types");
 		}
@@ -39,10 +22,13 @@ public readonly record struct DeckOptions
 		}
 	}
 
-	public bool HasSpecialCards { get; }
-	public bool HasNumericCards { get; }
-
 	public int TotalCards { get; }
-	public DeckDescription SpecialDeckOptions { get; }
-	public DeckDescription NumericDeckOptions { get; }
+	public CardGroupDescription[] GroupOptions { get; }
+
+	private readonly HashSet<string> HasCardTypeMap;
+
+	public readonly bool HasCardOfType(CardGroupDescription _descriptor) =>
+		HasCardOfType(_descriptor.GroupName);
+	public readonly bool HasCardOfType(string _name) =>
+		HasCardTypeMap.Contains(_name);
 }

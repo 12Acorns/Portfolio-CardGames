@@ -2,19 +2,17 @@
 
 namespace Deck.Deck;
 
-public readonly struct DeckDescription
+public readonly struct CardGroupDescription
 {
-	public DeckDescription(IEnumerable<CardDescription> _descriptions)
+	public CardGroupDescription(string _groupName, IEnumerable<CardDescription> _descriptions)
 	{
-		foreach(var _option in _descriptions)
-		{
-			TotalCards += _option.TotalCount;
-		}
-
+		GroupName = _groupName;
 		CardDescriptions = _descriptions;
 		DescriptionsLength = CardDescriptions.Count();
+		TotalCards = _descriptions.Sum(x => x.TotalCount);
 	}
 
+	public string GroupName { get; }
 	public int DescriptionsLength { get; }
 	public int TotalCards { get; }
 	public IEnumerable<CardDescription> CardDescriptions { get; }

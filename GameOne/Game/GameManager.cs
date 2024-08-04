@@ -2,6 +2,7 @@
 using GameOne._Player;
 using Deck.Deck;
 using Renderer;
+using Deck.Extensions;
 
 namespace GameOne.Game;
 
@@ -14,9 +15,10 @@ internal sealed class GameManager
 
 	public GameManager()
 	{
-		var _deck = new CardDeckBuilder()
+		var _options = new DeckOptions([DeckFactory.GetDefaultNumericDescription(), DeckFactory.GetDefaultSpecialDescription()]);
+
+		var _deck = new CardDeckBuilder(_options, CardExtensions.MapToScore)
 			.WithCustomShuffleOptions(RandomizerFactory.Get(RandomizerType.KnuthFisher))
-			.WithCustomDeckOptions(DeckOptions.Default)
 			.Build();
 
 		manager = new(_deck, PLAYERS, STARTINGCARDS);

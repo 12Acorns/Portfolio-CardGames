@@ -28,7 +28,8 @@ internal sealed class RoundManager
 
 		DiscardPile.Add(_card);
 
-		while(_card.Description.Type is CardType.Special)
+		// Make sure first playing card is NUMERICTYPE
+		while(_card.Description.Type == Globals.SpecialType)
 		{
 			if(!PickupDeck.TryNextFree(out _card))
 			{
@@ -90,7 +91,7 @@ internal sealed class RoundManager
 	}
 	public void SkipPlayer()
 	{
-		if(PeekDiscardPileTopCard().Data.SubType is not CardSubType.PlusTwo)
+		if(PeekDiscardPileTopCard().Data.SubType != Globals.PlusTwoSubType)
 		{
 			return;
 		}
@@ -100,7 +101,7 @@ internal sealed class RoundManager
 	public void SetWildColour(IColour _colour)
 	{
 		var _card = DiscardPile.Peek();
-		if(_card.Data.SubType is not CardSubType.Wild or CardSubType.WildPlusFour)
+		if(_card.Data.SubType != Globals.WildSubType || _card.Data.SubType != Globals.WildPlusFourSubType)
 		{
 			return;
 		}
@@ -191,32 +192,38 @@ internal sealed class RoundManager
 			return false;
 		}
 
-		switch(_subType)
+		if(_subType == Globals.PlusTwoSubType)
 		{
-			case CardSubType.PlusTwo:
-				var _nextPlayer = PeekPlayer(1);
-				_nextPlayer.GiveCard(GetTopCard());
-				SkipPlayer();
-				return false;
-			case CardSubType.Skip:
-				SkipPlayer();
-				return false;
-			case CardSubType.Reverse:
-				reverseOrder = !reverseOrder;
-				return false;
-			case CardSubType.Wild:
-				return true;
-			case CardSubType.WildPlusFour:
-				_nextPlayer = PeekPlayer(1);
-				_nextPlayer.GiveCard(GetTopCard());
-				_nextPlayer.GiveCard(GetTopCard());
-				_nextPlayer.GiveCard(GetTopCard());
-				_nextPlayer.GiveCard(GetTopCard());
-				SkipPlayer();
-				return true;
-			default:
-				throw new NotSupportedException(nameof(_subType) + " is not a supported type");
+			var _nextPlayer = PeekPlayer(1);
+			_nextPlayer.GiveCard(GetTopCard());
+			SkipPlayer();
+			return false;
 		}
+		if(_subType == Globals.SkipSubType)
+		{
+			SkipPlayer();
+			return false;
+		}
+		if(_subType == Globals.ReverseSubType)
+		{
+			reverseOrder = !reverseOrder;
+			return false;
+		}
+		if(_subType == Globals.WildSubType)
+		{
+			return true;
+		}
+		if(_subType == Globals.WildPlusFourSubType)
+		{
+			var _nextPlayer = PeekPlayer(1);
+			_nextPlayer.GiveCard(GetTopCard());
+			_nextPlayer.GiveCard(GetTopCard());
+			_nextPlayer.GiveCard(GetTopCard());
+			_nextPlayer.GiveCard(GetTopCard());
+			SkipPlayer();
+			return true;
+		}
+		throw new NotSupportedException(nameof(_subType) + " is not a supported type");
 	}
 	private void Shuffle()
 	{

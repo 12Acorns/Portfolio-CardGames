@@ -5,14 +5,17 @@ namespace Deck.Deck;
 
 public sealed class CardDeckBuilder
 {
-	private IRandomizer shuffleOptions = RandomizerFactory.Get(RandomizerType.DefualtRandom);
-	private DeckOptions options = DeckOptions.Default;
-
-	public CardDeckBuilder WithCustomDeckOptions(DeckOptions _options)
+	public CardDeckBuilder(DeckOptions _options, Func<CardSubType, byte> _scoreMapping)
 	{
+		scoreMapping = _scoreMapping;
 		options = _options;
-		return this;
 	}
+
+	private readonly Func<CardSubType, byte> scoreMapping;
+	private readonly DeckOptions options;
+
+	private IRandomizer shuffleOptions = RandomizerFactory.Get(RandomizerType.DefualtRandom);
+
 	public CardDeckBuilder WithCustomShuffleOptions(IRandomizer _randomizer)
 	{
 		shuffleOptions = _randomizer;
@@ -31,48 +34,33 @@ public sealed class CardDeckBuilder
 	{
 		var _cards = new GameCard[options.TotalCards].AsSpan();
 
-		var _specialCardOptions = options.SpecialDeckOptions;
-		var _numericCardOptions = options.NumericDeckOptions;
-
-		CreateSpecialCards(0, _specialCardOptions, _cards, out int _offset);
-		CreateNumericCards(_offset, _numericCardOptions, _cards, out _);
+		int _index = 0;
+		foreach(var _groupDescriptor in options.GroupOptions)
+		{
+			CreateCardsOfType(_cards, _index, _groupDescriptor, out _index);
+		}
 
 		return _cards;
 	}
-
-	private static void CreateNumericCards(int _initialIndex, DeckDescription _deckOptions,
-		Span<GameCard> _source, out int _endIndex)
-	{
-		CreateCardOfType(_source, _initialIndex, _deckOptions, CardSubType.Zero, out _endIndex);
-		CreateCardOfType(_source, _endIndex, _deckOptions, CardSubType.One, out _endIndex);
-		CreateCardOfType(_source, _endIndex, _deckOptions, CardSubType.Two, out _endIndex);
-		CreateCardOfType(_source, _endIndex, _deckOptions, CardSubType.Three, out _endIndex);
-		CreateCardOfType(_source, _endIndex, _deckOptions, CardSubType.Four, out _endIndex);
-		CreateCardOfType(_source, _endIndex, _deckOptions, CardSubType.Five, out _endIndex);
-		CreateCardOfType(_source, _endIndex, _deckOptions, CardSubType.Six, out _endIndex);
-		CreateCardOfType(_source, _endIndex, _deckOptions, CardSubType.Seven, out _endIndex);
-		CreateCardOfType(_source, _endIndex, _deckOptions, CardSubType.Eight, out _endIndex);
-		CreateCardOfType(_source, _endIndex, _deckOptions, CardSubType.Nine, out _endIndex);
-	}
-	private static void CreateSpecialCards(int _initialIndex, DeckDescription _description,
-		Span<GameCard> _source, out int _endIndex)
-	{
-		CreateCardOfType(_source, _initialIndex, _description, CardSubType.PlusTwo, out _endIndex);
-		CreateCardOfType(_source, _endIndex, _description, CardSubType.Skip, out _endIndex);
-		CreateCardOfType(_source, _endIndex, _description, CardSubType.Reverse, out _endIndex);
-		CreateCardOfType(_source, _endIndex, _description, CardSubType.Wild, out _endIndex);
-		CreateCardOfType(_source, _endIndex, _description, CardSubType.WildPlusFour, out _endIndex);
-	}
-	private static void CreateCardOfType(Span<GameCard> _source, int _initialIndex,
-		DeckDescription _deckDescription, CardSubType _type, out int _endIndex)
+	private void CreateCardsOfType(Span<GameCard> _source, int _initialIndex,
+		CardGroupDescription _deckDescription, out int _endIndex)
 	{
 		_endIndex = _initialIndex;
+
+
 		foreach(var _cardDescription in _deckDescription.CardDescriptions)
 		{
-			CreateCardType(_source, _endIndex, _cardDescription, _type, out _endIndex);
+			var _types = _cardDescription.CardCountMapping
+				.Where(x => x.Value > 0)
+				.Select(x => x.Key);
+
+			foreach(var _type in _types)
+			{
+				CreateCardType(_source, _endIndex, _cardDescription, _type, out _endIndex);
+			}
 		}
 	}
-	private static void CreateCardType(Span<GameCard> _source, int _offset, CardDescription _description,
+	private void CreateCardType(Span<GameCard> _source, int _offset, CardDescription _description,
 		CardSubType _subType, out int _endIndex)
 	{
 		_endIndex = _offset;
@@ -82,7 +70,7 @@ public sealed class CardDeckBuilder
 		for(int j = 0; j < _count; j++, _endIndex++)
 		{
 			_source[_endIndex] =
-				new GameCard(_description, new CardData(_subType));
+				new GameCard(_description, new CardData(_subType, scoreMapping));
 		}
 	}
 }

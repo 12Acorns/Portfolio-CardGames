@@ -1,5 +1,6 @@
 ﻿using Deck.Deck.Card;
 using Deck.Extensions;
+using GameOne.Extensions;
 using GameOne.Game;
 
 namespace GameOne._Player;
@@ -8,9 +9,8 @@ internal abstract class Player
 {
 	public Player(IEnumerable<GameCard> _startingCards, RoundManager _manager)
 	{
-		// Crude way to sort, in future implement IComparer in GameCard and use Sort() for that
 		var _groups = _startingCards.GroupBy(x => x.Description.Colour);
-		var _whole = _groups.SelectMany(x => x.Select(x => x).OrderBy(x => x.Data.SubType));
+		var _whole = _groups.SelectMany(x => x.Select(x => x).OrderBy(x => x.Data.SubType, new CardComparison()));
 		cards = _whole.ToList();
 
 		currentCardHandle = cards.Count / 2;

@@ -1,13 +1,11 @@
-﻿using Deck.Extensions;
-
-namespace Deck.Deck.Card;
+﻿namespace Deck.Deck.Card;
 
 public readonly struct CardData
 {
-	public CardData(CardSubType _subType)
+	public CardData(CardSubType _subType, Func<CardSubType, byte> _scoreMapping)
 	{
 		SubType = _subType;
-		Score = SubType.MapToScore();
+		Score = _scoreMapping(_subType);
 	}
 
 	/// <summary>

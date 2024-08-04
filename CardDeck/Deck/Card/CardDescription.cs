@@ -1,4 +1,5 @@
-﻿using Deck.Deck.Card.Colour;
+﻿using System.Collections.Frozen;
+using Deck.Deck.Card.Colour;
 
 namespace Deck.Deck.Card;
 
@@ -9,13 +10,13 @@ public record CardDescription
 		Type = _type;
 		Colour = _colour;
 		ColourSet = _colourSet;
-		CardCountMapping = _cardCountMapping.AsReadOnly();
+		CardCountMapping = _cardCountMapping.ToFrozenDictionary();
 		TotalCount = CardCountMapping.Values.Sum(x => x);
 	}
 
 	public CardType Type { get; }
 	public IColour Colour { get; set; }
 	public IColourSet ColourSet { get; }
-	public IReadOnlyDictionary<CardSubType, byte> CardCountMapping { get; }
+	public FrozenDictionary<CardSubType, byte> CardCountMapping { get; }
 	public int TotalCount { get; }
 }

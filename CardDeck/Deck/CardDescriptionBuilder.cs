@@ -1,174 +1,66 @@
 ﻿using System.Runtime.CompilerServices;
-using Deck.Deck.Card;
 using Deck.Deck.Card.Colour;
+using Deck.Deck.Card;
 
 namespace Deck.Deck;
 
 public sealed class CardDescriptionBuilder
 {
+	private const byte DEFAULTCOUNT = 0;
+
 	public CardDescriptionBuilder(CardType _cardType, IColourSet _set, IColour _cardColour)
 	{
 		set = _set;
 		type = _cardType;
 		colour = _cardColour;
 
-		switch(_cardType)
-		{
-			case CardType.Numeric:
-				cardCountPerSubType = new()
-				{
-					// Numeric
-					{ CardSubType.Zero, 0 },
-					{ CardSubType.One, 0 },
-					{ CardSubType.Two, 0 },
-					{ CardSubType.Three, 0 },
-					{ CardSubType.Four, 0 },
-					{ CardSubType.Five, 0 },
-					{ CardSubType.Six, 0 },
-					{ CardSubType.Seven, 0 },
-					{ CardSubType.Eight, 0 },
-					{ CardSubType.Nine, 0 },
-				};
-				break;
-			case CardType.Special:
-				cardCountPerSubType = new()
-				{
-					// Special
-					{ CardSubType.PlusTwo, 0 },
-					{ CardSubType.Skip, 0 },
-					{ CardSubType.Reverse, 0 },
-					
-					// Wild (Special)
-					{ CardSubType.WildPlusFour, 0 },
-					{ CardSubType.Wild, 0 },
-				};
-				break;
-			default:
-				throw new ArgumentOutOfRangeException(nameof(_cardType));
-		}
+		cardCountPerSubType = _cardType.TypeMembers
+			.ToDictionary(x => x, x => DEFAULTCOUNT);
+
+		methodCallMap = new(_cardType.TypeMembers.Count + 1);
 	}
 
 	private readonly CardType type;
 	private readonly IColourSet set;
 	private readonly IColour colour;
+	private readonly HashSet<CardSubType> methodCallMap;
 	private readonly Dictionary<CardSubType, byte> cardCountPerSubType;
 
-	#region Numeric Cards
-	public CardDescriptionBuilder WithZero(byte _count)
+	public CardDescriptionBuilder WithType(CardSubType _type, byte _count)
 	{
-		ThrowIfSpecial();
-		cardCountPerSubType[CardSubType.Zero] = _count;
+		ThrowIfNotTypeOrUsed(_type);
+		cardCountPerSubType[_type] = _count;
 		return this;
 	}
-	public CardDescriptionBuilder WithOne(byte _count)
-	{
-		ThrowIfSpecial();
-		cardCountPerSubType[CardSubType.One] = _count;
-		return this;
-	}
-	public CardDescriptionBuilder WithTwo(byte _count)
-	{
-		ThrowIfSpecial();
-		cardCountPerSubType[CardSubType.Two] = _count;
-		return this;
-	}
-	public CardDescriptionBuilder WithThree(byte _count)
-	{
-		ThrowIfSpecial();
-		cardCountPerSubType[CardSubType.Three] = _count;
-		return this;
-	}
-	public CardDescriptionBuilder WithFour(byte _count)
-	{
-		ThrowIfSpecial();
-		cardCountPerSubType[CardSubType.Four] = _count;
-		return this;
-	}
-	public CardDescriptionBuilder WithFive(byte _count)
-	{
-		ThrowIfSpecial();
-		cardCountPerSubType[CardSubType.Five] = _count;
-		return this;
-	}
-	public CardDescriptionBuilder WithSix(byte _count)
-	{
-		ThrowIfSpecial();
-		cardCountPerSubType[CardSubType.Six] = _count;
-		return this;
-	}
-	public CardDescriptionBuilder WithSeven(byte _count)
-	{
-		ThrowIfSpecial();
-		cardCountPerSubType[CardSubType.Seven] = _count;
-		return this;
-	}
-	public CardDescriptionBuilder WithEight(byte _count)
-	{
-		ThrowIfSpecial();
-		cardCountPerSubType[CardSubType.Eight] = _count;
-		return this;
-	}
-	public CardDescriptionBuilder WithNine(byte _count)
-	{
-		ThrowIfSpecial();
-		cardCountPerSubType[CardSubType.Nine] = _count;
-		return this;
-	}
-	#endregion
-	#region Special Cards
-	public CardDescriptionBuilder WithPlusTwo(byte _count)
-	{
-		ThrowIfNumeric();
-		cardCountPerSubType[CardSubType.PlusTwo] = _count;
-		return this;
-	}
-	public CardDescriptionBuilder WithReverse(byte _count)
-	{
-		ThrowIfNumeric();
-		cardCountPerSubType[CardSubType.Reverse] = _count;
-		return this;
-	}
-	public CardDescriptionBuilder WithSkip(byte _count)
-	{
-		ThrowIfNumeric();
-		cardCountPerSubType[CardSubType.Skip] = _count;
-		return this;
-	}
-	public CardDescriptionBuilder WithWild(byte _count)
-	{
-		ThrowIfNumeric();
-		cardCountPerSubType[CardSubType.Wild] = _count;
-		return this;
-	}
-	public CardDescriptionBuilder WithWildPlusFour(byte _count)
-	{
-		ThrowIfNumeric();
-		cardCountPerSubType[CardSubType.WildPlusFour] = _count;
-		return this;
-	}
-	#endregion
 
 	public CardDescription Build()
 	{
 		return new CardDescription(type, colour, set, cardCountPerSubType);
 	}
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	private void ThrowIfNumeric()
+	#region ThrowIf X
+	private void ThrowIfNotTypeOrUsed(CardSubType _type)
 	{
-		if(type != CardType.Special)
+		ThrowIfAlreadyUsed(_type);
+		ThrowIfNotType(_type);
+	}
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	private void ThrowIfNotType(CardSubType _type)
+	{
+		if(!type.TypeMembers.Contains(_type))
 		{
-			throw new InvalidOperationException($"Invalid operation. Cannot use Numeric Card methods if " +
-				$"current state is {CardType.Special}");
+			throw new InvalidOperationException(
+				$"Invalid operation. Cannot use CardSubType '{_type.SubTypeName}' if " +
+				$"current CardType is {type.TypeName}");
 		}
 	}
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	private void ThrowIfSpecial()
+	private void ThrowIfAlreadyUsed(CardSubType _type)
 	{
-		if(type != CardType.Numeric)
+		if(!methodCallMap.Add(_type))
 		{
-			throw new InvalidOperationException($"Invalid operation. Cannot use Special Card methods if " +
-				$"current state is {CardType.Numeric}");
+			throw new Exception($"Cannot use '{_type.SubTypeName}' again.");
 		}
 	}
+	#endregion
 }

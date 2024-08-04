@@ -7,21 +7,9 @@ public record struct GameCard
 		Description = _description;
 		Data = _data;
 
-		if(Description.Type is CardType.Numeric &&
-			_data.SubType is not (CardSubType.Zero or CardSubType.One
-			   or CardSubType.Two or CardSubType.Three
-			   or CardSubType.Four or CardSubType.Five
-			   or CardSubType.Six or CardSubType.Seven
-			   or CardSubType.Eight or CardSubType.Nine))
+		if(!_description.Type.TypeMembers.Contains(_data.SubType))
 		{
-			throw new ArgumentException("subType is not a valid numeric type");
-		}
-		if(_description.Type is CardType.Special &&
-			_data.SubType is not (CardSubType.Skip or CardSubType.Reverse
-						 or CardSubType.PlusTwo or CardSubType.WildPlusFour
-						 or CardSubType.Wild))
-		{
-			throw new ArgumentException("subType is not a valid special type");
+			throw new ArgumentException($"Member ({_data.SubType}) does not inherit from {_description.Type.TypeName}.");
 		}
 
 		hash = HashCode.Combine(Description.Colour, Data.SubType, Data.Score);

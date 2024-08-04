@@ -1,6 +1,6 @@
-﻿using Deck.Deck.Card;
-using Deck.Deck.Card.Colour;
+﻿using Deck.Deck.Card.Colour;
 using Deck.Extensions;
+using Deck.Deck.Card;
 using GameOne.Game;
 
 namespace GameOne._Player;
@@ -12,18 +12,16 @@ internal sealed class GameAI : Player
 	{
 		Name = _name;
 		manager.OnPlay += OnCardPlace;
+
 	}
 
-	private Dictionary<Player, List<GameCard>> playerCardMap = new(3);
+	private readonly Dictionary<Player, List<GameCard>> playerCardMap = new(3);
 
 	public override string Name { get; }
 
 	protected override void PlayImpl(Action<Player> _render)
 	{
 		var _topDiscardCard = manager.PeekDiscardPileTopCard();
-
-		var _hasWild = cards.Any(x => x.Data.SubType is CardSubType.Wild);
-		var _hasWildFour = cards.Any(x => x.Data.SubType is CardSubType.WildPlusFour);
 
 		var _player = manager.PeekPlayer(1);
 
@@ -39,18 +37,17 @@ internal sealed class GameAI : Player
 			return;
 		}
 
-		var _cardColourMap = _cardHistory
+		var _cardColourAndCount = _cardHistory
 			.GroupBy(x => x.Description.Colour)
-			.ToDictionary(x => x.Key, x => x.Count());
+			.Select(x => (x.Key, x.Count()))
+			.OrderBy(x => x.Item2);
 
-		var _ordered = _cardColourMap.OrderBy(x => x.Value);
 
-
-		if(Wild(_player, _ordered, x => x.Data.SubType is CardSubType.WildPlusFour))
+		if(Wild(_player, _cardColourAndCount, x => x.Data.SubType == Globals.WildPlusFourSubType))
 		{
 			return;
 		}
-		if(Wild(_player, _ordered, x => x.Data.SubType is CardSubType.Wild))
+		if(Wild(_player, _cardColourAndCount, x => x.Data.SubType == Globals.WildSubType))
 		{
 			return;
 		}
@@ -59,7 +56,7 @@ internal sealed class GameAI : Player
 			return;
 		}
 	}
-	private bool Wild(Player _player, IOrderedEnumerable<KeyValuePair<IColour, int>> _ordered,
+	private bool Wild(Player _player, IOrderedEnumerable<(IColour, int)> _ordered,
 		Predicate<GameCard> _findPredicate)
 	{
 		if(_player.Cards.Length >= 4)
@@ -75,14 +72,14 @@ internal sealed class GameAI : Player
 
 		var _selfMostCommonColour = cards
 			.GroupBy(x => x.Description.Colour)
-			.ToDictionary(x => x.Key, x => x.Count());
-		var _selfOrdered = _selfMostCommonColour.OrderBy(x => x.Value);
+			.Select(x => (x.Key, x.Count()))
+			.OrderBy(x => x.Item2);
 
 		int _index = 0;
 		foreach(var _pair in _ordered)
 		{
-			var (_colour, _count) = _ordered.ElementAt(_index);
-			var (_selfColour, _selfCount) = _selfOrdered.ElementAt(_index);
+			var (_colour, _count) = _pair;
+			var (_selfColour, _selfCount) = _selfMostCommonColour.ElementAt(_index);
 
 			if(_selfColour == _colour)
 			{

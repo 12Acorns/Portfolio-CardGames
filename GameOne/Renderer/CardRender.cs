@@ -1,5 +1,5 @@
-﻿using FastEnumUtility;
-using Deck.Deck.Card;
+﻿using Deck.Deck.Card;
+using Deck.Extensions;
 using System.Text;
 
 namespace Renderer;
@@ -29,8 +29,8 @@ internal static class CardRender
 						 // Middle Row - Offset to previous row + Offset to start of middle row
 		var _centreIndex = CARDLENGTH * cardHeight / 2 - CARDLENGTH + 1;
 
-		var _cardType = _card.Data.SubType;
-		var _cardTypeLength = _cardType.FastToString().Length;
+		var _cardType = _card.Data.SubType.ReadableNameMapping();
+		var _cardTypeLength = _cardType.Length;
 
 		var _beginIndex = (CARDLENGTH - _cardTypeLength) / 2;
 
