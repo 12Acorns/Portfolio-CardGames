@@ -39,6 +39,7 @@ internal static class CardRender
 
 		_builder.Insert(_centreIndex + _beginIndex, _cardType);
 		_builder.Remove(_centreIndex + _beginIndex + _cardTypeLength, _cardTypeLength);
+		_builder.AppendFormat("\nColour: {0}", _card.Description.Colour.Name);
 
 		return _builder.ToString();
 	}

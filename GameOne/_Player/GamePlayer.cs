@@ -60,13 +60,7 @@ internal sealed class GamePlayer : Player
 			return;
 		}
 
-		CardAction(_option, AskOption, _render, out bool _colourChange, out bool _won);
-
-		if(_won)
-		{
-			manager.OnWin(this);
-			return;
-		}
+		CardAction(_option, AskOption, _render, out bool _colourChange);
 
 		if(!_colourChange)
 		{

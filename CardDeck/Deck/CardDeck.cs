@@ -29,7 +29,7 @@ public sealed class CardDeck
 		randomizer = _randomizer;
 	}
 
-	public int RemainingCards => cards.Length - position;
+	public int RemainingCards => cards.Length - (position + 1);
 	public ReadOnlySpan<GameCard> Cards => cards;
 
 	private int position;
@@ -48,9 +48,14 @@ public sealed class CardDeck
 		randomizer.Randomize(cards);
 	}
 
+	public void SetCurrent(GameCard _card)
+	{
+		cards[position] = _card;
+	}
 	public GameCard Peek()
 	{
-		return Current();
+		var _curent = Current();
+		return _curent;
 	}
 	public bool AddRange(ReadOnlySpan<GameCard> _cards)
 	{

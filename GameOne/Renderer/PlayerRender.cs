@@ -17,7 +17,7 @@ internal static class PlayerRender
 		foreach(var _player in _players)
 		{
 			var _name = _player.Name;
-			var _score = _player.Score;
+			var _score = _player.SumOfCardsScores;
 
 			var _nameLength = _name.Length;
 			var _totalNameSegmentLength = NAME.Length + _nameLength;

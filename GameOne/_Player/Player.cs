@@ -19,6 +19,7 @@ internal abstract class Player
 	}
 
 	private int currentCardHandleVal;
+	private int score;
 
 	protected int currentCardHandle
 	{
@@ -33,9 +34,9 @@ internal abstract class Player
 			currentCardHandleVal %= cards.Count;
 		}
 	}
-	protected List<GameCard> cards { get; }
 	protected string playIndicator => $"{Name}'s turn.\n";
-	protected RoundManager manager { get; }
+	protected readonly List<GameCard> cards;
+	protected readonly RoundManager manager;
 
 
 	public GameCard CurrentCard => cards[currentCardHandle];
@@ -44,6 +45,11 @@ internal abstract class Player
 	public abstract string Name { get; }
 	public int TotalCards => cards.Count;
 	public int Score
+	{
+		get => score;
+		set => score = value;
+	}
+	public int SumOfCardsScores
 	{
 		get
 		{
@@ -67,7 +73,10 @@ internal abstract class Player
 		var _topCard = manager.PeekDiscardPileTopCard();
 		if(!HasPlayableCard(_topCard))
 		{
-			Console.WriteLine("Can not play any cards, auto-picked up");
+			if(this == manager.NonAI)
+			{
+				Console.WriteLine("Can not play any cards, auto-picked up");
+			}
 			GiveCard(manager.GetTopCard());
 			return;
 		}
@@ -124,11 +133,9 @@ internal abstract class Player
 		UserCardOptions _option, 
 		Action<Action<Player>> _onBufferMove, 
 		Action<Player> _render,
-		out bool _colourChange,
-		out bool _won)
+		out bool _colourChange)
 	{
 		_colourChange = false;
-		_won = false;
 
 		switch(_option)
 		{
@@ -159,7 +166,8 @@ internal abstract class Player
 				_onBufferMove(_render);
 				break;
 		}
-		_won = cards.Count == 0;
+
+		manager.EvaluatePostPlay();
 	}
 	protected bool HasPlayableCard(GameCard _compareTo)
 	{
@@ -167,6 +175,6 @@ internal abstract class Player
 	}
 	public override string ToString()
 	{
-		return $"Name: {Name}\nScore: {Score}\n";
+		return $"Name: {Name}\nScore: {SumOfCardsScores}\n";
 	}
 }

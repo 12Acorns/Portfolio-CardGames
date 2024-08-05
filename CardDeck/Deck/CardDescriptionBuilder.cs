@@ -8,7 +8,7 @@ public sealed class CardDescriptionBuilder
 {
 	private const byte DEFAULTCOUNT = 0;
 
-	public CardDescriptionBuilder(CardType _cardType, IColourSet _set, IColour _cardColour)
+	public CardDescriptionBuilder(CardType _cardType, IColourSet _set, RGBColour _cardColour)
 	{
 		set = _set;
 		type = _cardType;
@@ -22,7 +22,7 @@ public sealed class CardDescriptionBuilder
 
 	private readonly CardType type;
 	private readonly IColourSet set;
-	private readonly IColour colour;
+	private readonly RGBColour colour;
 	private readonly HashSet<CardSubType> methodCallMap;
 	private readonly Dictionary<CardSubType, byte> cardCountPerSubType;
 

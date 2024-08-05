@@ -55,13 +55,19 @@ internal sealed class RoundManager
 	private int skipPlayerCount;
 	private bool reverseOrder;
 
-	public void OnWin(Player _player)
+
+	public void EvaluatePostPlay()
+	{
+		OnWin(CurrentPlayer);
+	}
+	private void OnWin(Player _player)
 	{
 		if(_player.Cards.Length != 0)
 		{
 			return;
 		}
 		GameOver = true;
+		_player.Score += AllPlayers().Sum(x => x.SumOfCardsScores);
 	}
 	public ReadOnlySpan<GameCard> GetMultipleCards(int _amount)
 	{
@@ -91,22 +97,26 @@ internal sealed class RoundManager
 	}
 	public void SkipPlayer()
 	{
-		if(PeekDiscardPileTopCard().Data.SubType != Globals.PlusTwoSubType)
+		var _discardCard = PeekDiscardPileTopCard();
+		if(_discardCard.Data.SubType != Globals.WildPlusFourSubType
+		|| _discardCard.Data.SubType != Globals.PlusTwoSubType
+		|| _discardCard.Data.SubType != Globals.SkipSubType)
 		{
 			return;
 		}
 
 		skipPlayerCount++;
 	}
-	public void SetWildColour(IColour _colour)
+	public void SetWildColour(RGBColour _colour)
 	{
 		var _card = DiscardPile.Peek();
-		if(_card.Data.SubType != Globals.WildSubType || _card.Data.SubType != Globals.WildPlusFourSubType)
+		if(_card.Data.SubType != Globals.WildSubType && _card.Data.SubType != Globals.WildPlusFourSubType)
 		{
 			return;
 		}
 
 		_card.Description = _card.Description with { Colour = _colour };
+		DiscardPile.SetCurrent(_card);
 	}
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public GameCard PeekDiscardPileTopCard() => 
@@ -159,7 +169,7 @@ internal sealed class RoundManager
 
 		if(skipPlayerCount > 0)
 		{
-			skipPlayerCount++;
+			skipPlayerCount--;
 			_player = NextPlayer();
 		}
 
@@ -168,19 +178,21 @@ internal sealed class RoundManager
 	public Player PeekPlayer(int _offset)
 	{
 		int _index;
-		if(reverseOrder)
+		int _modValue;
+		if(reverseOrder || _offset < 0)
 		{
-			var _minus = playerIndex - _offset;
-			while(_minus < 0)
+			_offset = Math.Abs(_offset);
+			_modValue = playerIndex - _offset;
+			while(_modValue < 0)
 			{
-				_minus = playersLength + _minus;
+				_modValue = playersLength + _modValue;
 			}
-			_index = (byte)(_minus % playersLength);
 		}
 		else
 		{
-			_index = (byte)((playerIndex + _offset) % playersLength);
+			_modValue = playerIndex + _offset;
 		}
+		_index = (byte)(_modValue % playersLength);
 		return players[_index];
 	}
 	public bool ExecuteCardBehaviour(GameCard _card)
@@ -195,6 +207,7 @@ internal sealed class RoundManager
 		if(_subType == Globals.PlusTwoSubType)
 		{
 			var _nextPlayer = PeekPlayer(1);
+			_nextPlayer.GiveCard(GetTopCard());
 			_nextPlayer.GiveCard(GetTopCard());
 			SkipPlayer();
 			return false;
@@ -225,10 +238,35 @@ internal sealed class RoundManager
 		}
 		throw new NotSupportedException(nameof(_subType) + " is not a supported type");
 	}
+	private IEnumerable<Player> AllPlayers()
+	{
+		for(int i = 0; i < playersLength; i++)
+		{
+			yield return PeekPlayer(i);
+		}
+	}
 	private void Shuffle()
 	{
 		PickupDeck.Shuffle();
 		DiscardPile.Clear();
+
+		if(!PickupDeck.TryNextFree(out var _card))
+		{
+			throw new Exception("Failed to shuffle");
+		}
+
+		DiscardPile.Add(_card);
+
+		// Make sure first playing card is NUMERICTYPE
+		while(_card.Description.Type == Globals.SpecialType)
+		{
+			if(!PickupDeck.TryNextFree(out _card))
+			{
+				throw new Exception("Failed to init, try adding more cards");
+			}
+
+			DiscardPile.Add(_card);
+		}
 	}
 	private Player[] CreateAndGivePlayersCards(int _playerCount, int _cardsPerPlayer)
 	{

@@ -13,6 +13,8 @@ internal sealed class GameManager
 
 	private static readonly object lockObject = new();
 
+	private readonly ManualResetEvent threadEvent = new(false);
+
 	public GameManager()
 	{
 		var _options = new DeckOptions([DeckFactory.GetDefaultNumericDescription(), DeckFactory.GetDefaultSpecialDescription()]);
@@ -48,10 +50,16 @@ internal sealed class GameManager
 		playing = true;
 
 		var _gameThread = new Thread(Game);
-
 		_gameThread.Start();
 
-		while(!manager.GameOver) { }
+		while(!manager.GameOver) 
+		{
+			threadEvent.Set();
+		}
+
+		threadEvent.Reset();
+
+		Console.WriteLine(manager.CurrentPlayer.Name + $" Won\nPoints: {manager.CurrentPlayer.SumOfCardsScores}");
 	}
 	public void Render(Player _player)
 	{
@@ -68,9 +76,11 @@ internal sealed class GameManager
 		{
 			while(!manager.GameOver)
 			{
-				Render(_nonAI);
+				threadEvent.WaitOne();
 
+				Render(_nonAI);
 				manager.CurrentPlayer.Play(Render);
+
 
 				manager.NextPlayer();
 			}

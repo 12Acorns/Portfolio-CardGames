@@ -5,7 +5,7 @@ namespace Deck.Deck.Card;
 
 public record CardDescription
 {
-	public CardDescription(CardType _type, IColour _colour, IColourSet _colourSet, Dictionary<CardSubType, byte> _cardCountMapping)
+	public CardDescription(CardType _type, RGBColour _colour, IColourSet _colourSet, Dictionary<CardSubType, byte> _cardCountMapping)
 	{
 		Type = _type;
 		Colour = _colour;
@@ -15,7 +15,7 @@ public record CardDescription
 	}
 
 	public CardType Type { get; }
-	public IColour Colour { get; set; }
+	public RGBColour Colour { get; set; }
 	public IColourSet ColourSet { get; }
 	public FrozenDictionary<CardSubType, byte> CardCountMapping { get; }
 	public int TotalCount { get; }

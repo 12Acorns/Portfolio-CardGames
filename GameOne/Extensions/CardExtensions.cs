@@ -76,7 +76,7 @@ internal static class CardExtensions
 			return false;
 		}
 
-		// Same Colour
+		    // Same Colour
 		return _discardDescription.Colour == _desiredDescription.Colour
 			// Same Sub Type
 			|| _discardData.SubType == _desiredData.SubType
