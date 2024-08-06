@@ -41,7 +41,7 @@ internal abstract class Player
 
 	public GameCard CurrentCard => cards[currentCardHandle];
 	public bool IsTurn => manager.CurrentPlayer == this;
-	public GameCard[] Cards => [.. cards];
+	public List<GameCard> Cards => cards;
 	public abstract string Name { get; }
 	public int TotalCards => cards.Count;
 	public int Score
@@ -84,6 +84,7 @@ internal abstract class Player
 		PlayImpl(_render);
 	}
 
+	public void GiveCards(ReadOnlySpan<GameCard> _cards) => cards.AddRange(_cards);
 	public void GiveCard(GameCard _card) => cards.Add(_card);
 	public bool PlayCards(ReadOnlySpan<GameCard> _desiredCards)
 	{
@@ -143,6 +144,7 @@ internal abstract class Player
 				if(PlayCard(CurrentCard, out _colourChange))
 				{
 					manager.OnPlay(this);
+					manager.EvaluatePostPlay();
 					break;
 				}
 
@@ -166,8 +168,6 @@ internal abstract class Player
 				_onBufferMove(_render);
 				break;
 		}
-
-		manager.EvaluatePostPlay();
 	}
 	protected bool HasPlayableCard(GameCard _compareTo)
 	{

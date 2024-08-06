@@ -43,6 +43,13 @@ internal sealed class GameManager
 
 	public void Run()
 	{
+		var _winner = manager.AllPlayers().FirstOrDefault(x => x.Score > 500);
+		if(_winner != null)
+		{
+			Console.WriteLine($"{manager.CurrentPlayer} has won the game");
+			return;
+		}
+
 		if(playing)
 		{
 			return;
@@ -59,7 +66,12 @@ internal sealed class GameManager
 
 		threadEvent.Reset();
 
-		Console.WriteLine(manager.CurrentPlayer.Name + $" Won\nPoints: {manager.CurrentPlayer.SumOfCardsScores}");
+		var _winningPlayer = manager.CurrentPlayer;
+
+		Console.WriteLine(_winningPlayer.Name + $" Won\nPoints: {_winningPlayer.Score}");
+
+		playing = false;
+		Run();
 	}
 	public void Render(Player _player)
 	{
@@ -74,16 +86,25 @@ internal sealed class GameManager
 		var _nonAI = manager.NonAI;
 		lock(lockObject)
 		{
-			while(!manager.GameOver)
+			while(true)
 			{
 				threadEvent.WaitOne();
 
 				Render(_nonAI);
 				manager.CurrentPlayer.Play(Render);
 
+				if(manager.GameOver)
+				{
+					break;
+				}
 
 				manager.NextPlayer();
 			}
 		}
+		if(manager.AllPlayers().Any(x => x.Score > 500))
+		{
+			return;
+		}
+		Game();
 	}
 }

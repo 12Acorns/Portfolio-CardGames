@@ -67,9 +67,9 @@ internal sealed class GamePlayer : Player
 			return;
 		}
 
-		AskColourOptions(_render);
+		AskColourOptions();
 	}
-	private void AskColourOptions(Action<Player> _render)
+	private void AskColourOptions()
 	{
 		Console.WriteLine("Colour Options (Case-Sensitive):\n");
 		Console.Write(colours);
@@ -79,7 +79,7 @@ internal sealed class GamePlayer : Player
 		if(!UserOptionMapper.MapColourOption(set, _input, out var _colour))
 		{
 			Console.WriteLine("Please Enter A Valid Colour!");
-			AskColourOptions(_render);
+			AskColourOptions();
 			return;
 		}
 		manager.SetWildColour(_colour);

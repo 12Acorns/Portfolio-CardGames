@@ -2,7 +2,7 @@
 
 public interface IColourSet
 {
-	public static readonly IColourSet Default = new ClassicColours();
+	public static readonly IColourSet Classic = new ClassicColours();
 
 	public string SetName { get; }
 

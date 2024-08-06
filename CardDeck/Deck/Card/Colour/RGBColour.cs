@@ -4,7 +4,7 @@ namespace Deck.Deck.Card.Colour;
 
 public readonly struct RGBColour
 {
-	public static readonly RGBColour Default = new RGBColour();
+	public static readonly RGBColour None = new();
 
 	public static readonly RGBColour White = new("White", 255, 255, 255);
 	public static readonly RGBColour Black = new("Black", 0, 0, 0);
@@ -24,7 +24,7 @@ public readonly struct RGBColour
 	}
 	public RGBColour()
 	{
-		Name = "";
+		Name = "None";
 		R = default;
 		G = default;
 		B = default;
@@ -47,12 +47,13 @@ public readonly struct RGBColour
 		CardColour.Blue => Blue,
 		CardColour.Red => Red,
 		CardColour.Green => Green,
+		CardColour.None => None,
 		_ => throw new ArgumentOutOfRangeException(nameof(_colour))
 	};
 
 	public override string ToString()
 	{
-		return string.Format("R: {0}, G: {1}, B: {2}", R, G, B);
+		return string.Format("Colour: {0}\nR: {1}, G: {2}, B: {3}", Name, R, G, B);
 	}
 
 	public override bool Equals([NotNullWhen(true)] object? _obj)

@@ -64,11 +64,11 @@ internal static class CardExtensions
 		}
 		return _score;
 	}
-	public static bool CanPlay(this GameCard _card, GameCard _other, bool _strictPlay = true)
+	public static bool CanPlay(this GameCard _card, GameCard _comparison, bool _strictPlay = true)
 	{
-		var _discardDescription = _other.Description;
+		var _discardDescription = _comparison.Description;
 		var _desiredDescription = _card.Description;
-		var _discardData = _other.Data;
+		var _discardData = _comparison.Data;
 		var _desiredData = _card.Data;
 
 		if(_card.InUse && _strictPlay)

@@ -10,19 +10,19 @@ public static class DeckFactory
 	{
 		var _descriptions = new CardDescription[5];
 
-		ReadOnlySpan<RGBColour> _colours = IColourSet.Default.GetColours().ToArray();
+		ReadOnlySpan<RGBColour> _colours = IColourSet.Classic.GetColours().ToArray();
 
 		for(int i = 0; i < _colours.Length - 1; i++)
 		{
 			var _cardDescriptionBuilder =
-				new CardDescriptionBuilder(Globals.SpecialType, IColourSet.Default, _colours[i]);
+				new CardDescriptionBuilder(Globals.SpecialType, IColourSet.Classic, _colours[i]);
 			_descriptions[i] = _cardDescriptionBuilder
 				.WithType(Globals.PlusTwoSubType, 2).WithType(Globals.ReverseSubType, 2)
 				.WithType(Globals.SkipSubType, 2).Build();
 		}
 
 		var _wildCardsBuilder =
-			new CardDescriptionBuilder(Globals.SpecialType, IColourSet.Default, _colours[^1]);
+			new CardDescriptionBuilder(Globals.SpecialType, IColourSet.Classic, _colours[^1]);
 		_descriptions[4] = _wildCardsBuilder
 			.WithType(Globals.WildSubType, 4).WithType(Globals.WildPlusFourSubType, 4)
 			.Build();
@@ -31,14 +31,14 @@ public static class DeckFactory
 	}
 	public static CardGroupDescription GetDefaultNumericDescription()
 	{
-		ReadOnlySpan<RGBColour> _colours = IColourSet.Default.GetColours().ToArray();
+		ReadOnlySpan<RGBColour> _colours = IColourSet.Classic.GetColours().ToArray();
 
 		var _descriptions = new CardDescription[_colours.Length - 1];
 
 		for(int i = 0; i < _descriptions.Length; i++)
 		{
 			var _cardDescriptionBuilder =
-				new CardDescriptionBuilder(Globals.NumericType, IColourSet.Default, _colours[i]);
+				new CardDescriptionBuilder(Globals.NumericType, IColourSet.Classic, _colours[i]);
 			_cardDescriptionBuilder
 				.WithType(Globals.ZeroSubType, 1);
 

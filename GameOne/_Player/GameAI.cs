@@ -13,7 +13,26 @@ internal sealed class GameAI : Player
 	{
 		Name = _name;
 		manager.OnPlay += OnCardPlace;
+
+		defaultCardAction = (Predicate<GameCard> _indexPredicate, out bool _colourChange) =>
+		{
+			ArgumentNullException.ThrowIfNull(_indexPredicate);
+
+			_colourChange = false;
+			var _index = cards.FindIndex(_indexPredicate);
+			if(_index == -1)
+			{
+				return false;
+			}
+
+			currentCardHandle = _index;
+			CardAction(UserCardOptions.PlayCard, x => { }, x => { }, out _colourChange);
+			return true;
+		};
 	}
+
+	private delegate bool defaultAction(Predicate<GameCard> _indexPredicate, out bool _colourChange);
+	private readonly defaultAction defaultCardAction;
 
 	private readonly Dictionary<Player, List<GameCard>> playerCardMap = new(3);
 
@@ -25,32 +44,24 @@ internal sealed class GameAI : Player
 		var _nextPlayer = manager.PeekPlayer(1);
 
 		var _selfOrdered = cards
-			.Where(x => x.Description.Colour != (RGBColour)RGBColour.Black)
+			.Where(x => x.Description.Colour != RGBColour.None)
 			.GroupBy(x => x.Description.Colour)
 			.Select(x => (x.Key, x.Count()))
 			.OrderBy(x => x.Item2);
 
-		// Have no info on played cards for next player, so make a guess-
-		// TODO Implement better behaviour
+		// Have no info on played cards for next player, so make a guess
 		if(!playerCardMap.TryGetValue(_nextPlayer, out var _cardHistory))
 		{
-			var _playableCard = cards.First(x => x.CanPlay(_discardCard, false));
-
-			currentCardHandle = cards.IndexOf(_playableCard);
-
-			CardAction(UserCardOptions.PlayCard, x => { }, x => { },
-				out bool _colourChange);
-
-			if(!_colourChange)
+			defaultCardAction(x => x.CanPlay(_discardCard, false), out bool _colourChange);
+			if(_colourChange)
 			{
-				return;
+				manager.SetWildColour(_selfOrdered.First().Key);
 			}
-			manager.SetWildColour(_selfOrdered.First().Key);
 			return;
 		}
 
 		var _cardColourAndCount = _cardHistory
-			.Where(x => x.Description.Colour != (RGBColour)RGBColour.Black)
+			.Where(x => x.Description.Colour != RGBColour.None)
 			.GroupBy(x => x.Description.Colour)
 			.Select(x => (x.Key, x.Count()))
 			.OrderBy(x => x.Item2);
@@ -75,8 +86,7 @@ internal sealed class GameAI : Player
 	private bool Numeric(Player _nextPlayer, GameCard _discardCard, 
 		IOrderedEnumerable<(RGBColour, int)> _ordered)
 	{
-
-		return true;
+		return defaultCardAction(x => x.CanPlay(_discardCard, false), out _);
 	}
 	#endregion
 	#region Special
@@ -85,25 +95,25 @@ internal sealed class GameAI : Player
 	{
 		return Wild(_nextPlayer, _ordered, _selfOrdered, x => x.Data.SubType == Globals.WildPlusFourSubType)
 			|| Wild(_nextPlayer, _ordered, _selfOrdered, x => x.Data.SubType == Globals.WildSubType)
-			|| Reverse(_nextPlayer, _discardCard) || PlusTwo(_nextPlayer, _discardCard)
-			|| Skip(_nextPlayer, _discardCard);
+			|| Reverse(_nextPlayer, _discardCard) || MinorSpecial(_nextPlayer, _discardCard, Globals.PlusTwoSubType, 3)
+			|| MinorSpecial(_nextPlayer, _discardCard, Globals.SkipSubType, 4);
 	}
 	private bool Wild(Player _nextPlayer, IOrderedEnumerable<(RGBColour, int)> _ordered,
-		IOrderedEnumerable<(RGBColour, int)> _selfOrdered,
-		Predicate<GameCard> _findPredicate)
+		IOrderedEnumerable<(RGBColour, int)> _selfOrdered, Predicate<GameCard> _findPredicate)
 	{
-		if(_nextPlayer.Cards.Length >= 4)
+		if(_nextPlayer.TotalCards >= 4)
 		{
 			return false;
 		}
-		var _playingCardIndex = cards.FindIndex(_findPredicate);
 
+		var _playingCardIndex = cards.FindIndex(_findPredicate);
 		if(_playingCardIndex == -1)
 		{
 			return false;
 		}
 
-		int _index = 0;
+		currentCardHandle = _playingCardIndex;
+		RGBColour? _finalColour = null;
 		foreach(var (_otherPair, _selfPair) in _ordered.EnumerateMany(_selfOrdered))
 		{
 			var (_colour, _count) = _otherPair;
@@ -111,18 +121,19 @@ internal sealed class GameAI : Player
 
 			if(_selfColour == _colour)
 			{
-				_index++;
 				continue;
 			}
-			currentCardHandle = _playingCardIndex;
 
-			CardAction(UserCardOptions.PlayCard, x => { }, x => { },
-				out _);
-
-			manager.SetWildColour(_selfColour);
-			return true;
+			_finalColour = _selfColour;
+			break;
 		}
-		manager.SetWildColour(_selfOrdered.First().Item1);
+		if(!_finalColour.HasValue)
+		{
+			_finalColour = _selfOrdered.First().Item1;
+		}
+
+		CardAction(UserCardOptions.PlayCard, x => { }, x => { }, out _);
+		manager.SetWildColour(_finalColour.Value);
 		return true;
 	}
 	private bool Reverse(Player _nextPlayer, GameCard _discardCard)
@@ -135,61 +146,38 @@ internal sealed class GameAI : Player
 		}
 		// IE, Plus Two, block, reverse, PlusFourWild
 		var _previousPlayerDangerCards = _previousPlayer.Cards
-			.Select(x => x.Data.SubType == Globals.PlusTwoSubType
+			.Sum(x =>   (x.Data.SubType == Globals.PlusTwoSubType
 					  || x.Data.SubType == Globals.SkipSubType
 					  || x.Data.SubType == Globals.ReverseSubType
 					  || x.Data.SubType == Globals.WildPlusFourSubType)
-			.Sum(x => 1);
+					   ? 1 : 0);
 		var _nextPlayerDangerCards = _nextPlayer.Cards
-			.Select(x => x.Data.SubType == Globals.PlusTwoSubType
+			.Sum(x =>   (x.Data.SubType == Globals.PlusTwoSubType
 					  || x.Data.SubType == Globals.SkipSubType
 					  || x.Data.SubType == Globals.ReverseSubType
 					  || x.Data.SubType == Globals.WildPlusFourSubType)
-			.Sum(x => 1);
-
-
+					   ? 1 : 0);
 
 		if(_nextPlayerDangerCards > _previousPlayerDangerCards)
 		{
 			return false;
 		}
 
-		currentCardHandle = cards.FindIndex(x => x.Data.SubType == Globals.ReverseSubType
-											  && x.CanPlay(_discardCard, false));
-		CardAction(UserCardOptions.PlayCard, x => { }, x => { },
-			out _);
-
 		// Next player played less danger cards, so reverse as likely to not
 		// recieve a affect from danger card
-		return true;
+		return defaultCardAction(x => x.Data.SubType == Globals.ReverseSubType
+								   && x.CanPlay(_discardCard, false), out _);
 	}
-	private bool PlusTwo(Player _nextPlayer, GameCard _discardCard)
+	private bool MinorSpecial(Player _nextPlayer, GameCard _discardCard, 
+		CardSubType _typeComparison, int _minCardsToPlay)
 	{
-		if(_nextPlayer.TotalCards > 4)
+		if(_nextPlayer.TotalCards > _minCardsToPlay)
 		{
 			return false;
 		}
 
-		currentCardHandle = cards.FindIndex(x => x.Data.SubType == Globals.PlusTwoSubType
-											  && x.CanPlay(_discardCard, false));
-		CardAction(UserCardOptions.PlayCard, x => { }, x => { },
-			out _);
-
-		return true;
-	}
-	private bool Skip(Player _nextPlayer, GameCard _discardCard)
-	{
-		if(_nextPlayer.TotalCards > 3)
-		{
-			return false;
-		}
-
-		currentCardHandle = cards.FindIndex(x => x.Data.SubType == Globals.SkipSubType
-											  && x.CanPlay(_discardCard, false));
-		CardAction(UserCardOptions.PlayCard, x => { }, x => { },
-			out _);
-
-		return true;
+		return defaultCardAction(x => x.Data.SubType == _typeComparison
+								   && x.CanPlay(_discardCard, false), out _);
 	}
 	#endregion
 	#endregion
