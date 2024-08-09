@@ -27,10 +27,16 @@ public record struct GameCard
 	public readonly CardData Data { get; }
 	public bool InUse { get; private set; }
 
+	/// <summary>
+	/// Set card to be in use
+	/// </summary>
 	public void PickUp()
 	{
 		InUse = true;
 	}
+	/// <summary>
+	/// Set card to be no longer in use
+	/// </summary>
 	public void PutDown()
 	{
 		InUse = false;

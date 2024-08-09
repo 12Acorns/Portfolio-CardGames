@@ -23,9 +23,21 @@ internal abstract class Player
 
 	protected int currentCardHandle
 	{
-		get => currentCardHandleVal %= cards.Count;
+		get
+		{
+			if(cards.Count == 0)
+			{
+				return 0;
+			}
+			return currentCardHandleVal %= cards.Count;
+		}
 		set
 		{
+			if(cards.Count == 0)
+			{
+				currentCardHandleVal = 0;
+				return;
+			}
 			currentCardHandleVal = value;
 			if(currentCardHandle < 0)
 			{
@@ -37,7 +49,6 @@ internal abstract class Player
 	protected string playIndicator => $"{Name}'s turn.\n";
 	protected readonly List<GameCard> cards;
 	protected readonly RoundManager manager;
-
 
 	public GameCard CurrentCard => cards[currentCardHandle];
 	public bool IsTurn => manager.CurrentPlayer == this;
@@ -62,6 +73,10 @@ internal abstract class Player
 		}
 	}
 
+	public void Clear()
+	{
+		cards.Clear();
+	}
 	public void Play(Action<Player> _render)
 	{
 		if(!IsTurn)
@@ -83,7 +98,6 @@ internal abstract class Player
 
 		PlayImpl(_render);
 	}
-
 	public void GiveCards(ReadOnlySpan<GameCard> _cards) => cards.AddRange(_cards);
 	public void GiveCard(GameCard _card) => cards.Add(_card);
 	public bool PlayCards(ReadOnlySpan<GameCard> _desiredCards)

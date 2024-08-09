@@ -34,9 +34,24 @@ public sealed class CardDeck
 
 	private int position;
 	private int nextFreePosition;
-	private readonly GameCard[] cards;
 	private readonly IRandomizer randomizer;
 
+	internal readonly GameCard[] cards;
+
+	public void ShufflePutDown(IRandomizer _randomizer)
+	{
+		position = cards.Length - 1;
+		nextFreePosition = position;
+		_randomizer.Randomize(cards);
+        for (int i = 0; i < cards.Length; i++)
+        {
+			cards[i].PutDown();
+		}
+    }
+	public void ShufflePutDown()
+	{
+		ShufflePutDown(randomizer);
+	}
 	public void Shuffle(IRandomizer _randomizer)
 	{
 		position = cards.Length - 1;
@@ -44,11 +59,10 @@ public sealed class CardDeck
 	}
 	public void Shuffle()
 	{
-		position = cards.Length - 1;
-		randomizer.Randomize(cards);
+		Shuffle(randomizer);
 	}
 
-	public void SetCurrent(GameCard _card)
+	public void SetCurrentCard(GameCard _card)
 	{
 		cards[position] = _card;
 	}
@@ -106,9 +120,8 @@ public sealed class CardDeck
 
 		_card.PutDown();
 
+		position = nextFreePosition;
 		cards[nextFreePosition--] = _card;
-
-		position = nextFreePosition + 1;
 
 		return true;
 	}
@@ -130,6 +143,9 @@ public sealed class CardDeck
 		position--;
 		return position > 0;
 	}
+	/// <summary>
+	/// Destructive operation, will clear internal <see cref="cards"/> array.
+	/// </summary>
 	public void Clear()
 	{
 		position = cards.Length - 1;

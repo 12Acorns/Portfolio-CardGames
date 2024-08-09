@@ -53,10 +53,12 @@ internal sealed class GameAI : Player
 		if(!playerCardMap.TryGetValue(_nextPlayer, out var _cardHistory))
 		{
 			defaultCardAction(x => x.CanPlay(_discardCard, false), out bool _colourChange);
-			if(_colourChange)
+			if(!_colourChange)
 			{
-				manager.SetWildColour(_selfOrdered.First().Key);
+				return;
 			}
+			var _first = _selfOrdered.FirstOrDefault().Key;
+			manager.SetWildColour(_first);
 			return;
 		}
 

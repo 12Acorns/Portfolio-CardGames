@@ -55,6 +55,41 @@ internal sealed class RoundManager
 	private int skipPlayerCount;
 	private bool reverseOrder;
 
+	public void NewGame(int _startingCards)
+	{
+		playerIndex = 0;
+
+		for(int i = PickupDeck.Cards.Length; i > 0; i++)
+		{
+			PickupDeck.TryNextFree(out var _pickupCard);
+			if(_pickupCard.Data.SubType == Globals.)
+		}
+
+		PickupDeck.ShufflePutDown();
+		DiscardPile.Clear();
+		for(int i = 0; i < players.Length; i++)
+		{
+			players[i].Clear();
+
+
+		}
+
+		PickupDeck.TryNextFree(out var _card);
+
+		DiscardPile.Add(_card);
+
+		// Make sure first playing card is NUMERICTYPE
+		while(_card.Description.Type == Globals.SpecialType)
+		{
+			if(!PickupDeck.TryNextFree(out _card))
+			{
+				throw new Exception("Failed to init, try adding more cards");
+			}
+
+			DiscardPile.Add(_card);
+		}
+	}
+
 	public void EvaluatePostPlay()
 	{
 		OnWin(CurrentPlayer);
@@ -96,6 +131,12 @@ internal sealed class RoundManager
 	}
 	public void SetWildColour(RGBColour _colour)
 	{
+		if(_colour == RGBColour.None)
+		{
+			_colour = RGBColour.GetClassicColour((CardColour)Random.Shared.Next(4));
+			Console.WriteLine($"Invalid Colour, Got: {RGBColour.None.Name}, Now: {_colour.Name}");
+		}
+
 		var _card = DiscardPile.Peek();
 		if(_card.Data.SubType != Globals.WildSubType && _card.Data.SubType != Globals.WildPlusFourSubType)
 		{
@@ -103,7 +144,7 @@ internal sealed class RoundManager
 		}
 
 		_card.Description = _card.Description with { Colour = _colour };
-		DiscardPile.SetCurrent(_card);
+		DiscardPile.SetCurrentCard(_card);
 	}
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public GameCard PeekDiscardPileTopCard() => 
@@ -225,10 +266,7 @@ internal sealed class RoundManager
 	}
 	public IEnumerable<Player> AllPlayers()
 	{
-		for(int i = 0; i < playersLength; i++)
-		{
-			yield return PeekPlayer(i);
-		}
+		return players;
 	}
 	private void IncrementSkipCount()
 	{
@@ -276,7 +314,7 @@ internal sealed class RoundManager
 			_players[i] = i switch
 			{
 				0 => new GamePlayer("Player", _cards, this),
-				> 0 => new GameAI("AI " + i, _cards, this),
+				> 0 => new GameAI($"AI {i}", _cards, this),
 				_ => throw new IndexOutOfRangeException(nameof(i))
 			};
 		}

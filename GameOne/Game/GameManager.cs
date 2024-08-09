@@ -34,16 +34,20 @@ internal sealed class GameManager
 		}
 
 		renderer = new(players, manager.NonAI);
+
+		gameThread = new(Game);
+		gameThread.Start();
 	}
 
 	private bool playing;
 	private readonly Player[] players;
+	private readonly Thread gameThread;
 	private readonly RoundManager manager;
 	private readonly GameRenderer renderer;
 
 	public void Run()
 	{
-		var _winner = manager.AllPlayers().FirstOrDefault(x => x.Score > 500);
+		var _winner = players.FirstOrDefault(x => x.Score > 500);
 		if(_winner != null)
 		{
 			Console.WriteLine($"{manager.CurrentPlayer} has won the game");
@@ -55,9 +59,6 @@ internal sealed class GameManager
 			return;
 		}
 		playing = true;
-
-		var _gameThread = new Thread(Game);
-		_gameThread.Start();
 
 		while(!manager.GameOver) 
 		{
@@ -71,6 +72,9 @@ internal sealed class GameManager
 		Console.WriteLine(_winningPlayer.Name + $" Won\nPoints: {_winningPlayer.Score}");
 
 		playing = false;
+
+
+
 		Run();
 	}
 	public void Render(Player _player)
@@ -83,6 +87,8 @@ internal sealed class GameManager
 
 	private void Game()
 	{
+		threadEvent.WaitOne();
+
 		var _nonAI = manager.NonAI;
 		lock(lockObject)
 		{
