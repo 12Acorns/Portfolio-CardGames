@@ -1,8 +1,10 @@
-﻿using Deck.Deck.Randomizer;
+﻿using System.Runtime.CompilerServices;
+using Deck.Deck.Randomizer;
+using Deck.Extensions;
 using GameOne._Player;
+using Deck.Deck.Card;
 using Deck.Deck;
 using Renderer;
-using Deck.Extensions;
 
 namespace GameOne.Game;
 
@@ -10,47 +12,52 @@ internal sealed class GameManager
 {
 	private const int PLAYERS = 4;
 	private const int STARTINGCARDS = 7;
+	private const bool AIONLY = true;
 
-	private static readonly object lockObject = new();
+	private static readonly Lock _lockObject = new();
 
-	private readonly ManualResetEvent threadEvent = new(false);
+	private readonly ManualResetEvent _threadEvent = new(false);
 
 	public GameManager()
 	{
-		var _options = new DeckOptions([DeckFactory.GetDefaultNumericDescription(), DeckFactory.GetDefaultSpecialDescription()]);
+		var _options = new DeckOptions(
+		[
+			DeckFactory.GetDefaultNumericDescription(), 
+			DeckFactory.GetDefaultSpecialDescription()
+		]);
 
 		var _deck = new CardDeckBuilder(_options, CardExtensions.MapToScore)
 			.WithCustomShuffleOptions(RandomizerFactory.Get(RandomizerType.KnuthFisher))
 			.Build();
 
-		manager = new(_deck, PLAYERS, STARTINGCARDS);
+		_manager = new(_deck, PLAYERS, STARTINGCARDS, AIONLY);
 
-		players = new Player[PLAYERS];
+		_players = new Player[PLAYERS];
 
 		// Once fully iterated, will point back to first player
 		for(int i = 0; i < PLAYERS; i++)
 		{
-			players[i] = manager.NextPlayer();
+			_players[i] = _manager.NextPlayer();
 		}
 
-		renderer = new(players, manager.NonAI);
+		_renderer = new(_players, _manager.NonAI, AIONLY);
 
-		gameThread = new(Game);
-		gameThread.Start();
+		_gameThread = new(Game);
+		_gameThread.Start();
 	}
 
 	private bool playing;
-	private readonly Player[] players;
-	private readonly Thread gameThread;
-	private readonly RoundManager manager;
-	private readonly GameRenderer renderer;
+	private readonly Player[] _players;
+	private readonly Thread _gameThread;
+	private readonly RoundManager _manager;
+	private readonly GameRenderer _renderer;
 
 	public void Run()
 	{
-		var _winner = players.FirstOrDefault(x => x.Score > 500);
-		if(_winner != null)
+		var winner = _players.FirstOrDefault(x => x.Score >= 500);
+		if(winner != null)
 		{
-			Console.WriteLine($"{manager.CurrentPlayer} has won the game");
+			Console.WriteLine($"{_manager.CurrentPlayer} has won the game");
 			return;
 		}
 
@@ -60,54 +67,51 @@ internal sealed class GameManager
 		}
 		playing = true;
 
-		while(!manager.GameOver) 
+		while(!_manager.RoundOver) 
 		{
-			threadEvent.Set();
+			_threadEvent.Set();
 		}
 
-		threadEvent.Reset();
+		_threadEvent.Reset();
 
-		var _winningPlayer = manager.CurrentPlayer;
+		var winningPlayer = _manager.CurrentPlayer;
 
-		Console.WriteLine(_winningPlayer.Name + $" Won\nPoints: {_winningPlayer.Score}");
-
+		Console.WriteLine(winningPlayer.Name + $" Won\nPoints: {winningPlayer.Score}");
 		playing = false;
-
-
-
+		_manager.NewRound(STARTINGCARDS);
 		Run();
 	}
-	public void Render(Player _player)
+	public void Render(Player? _player)
 	{
-		renderer.Render(
-			manager.CurrentPlayer,
-			_player.CurrentCard,
-			manager.PeekDiscardPileTopCard());
+		_renderer.Render(
+			_manager.CurrentPlayer,
+			_player?.CurrentCard,
+			_manager.PeekDiscardPileTopCard());
 	}
 
 	private void Game()
 	{
-		threadEvent.WaitOne();
+		_threadEvent.WaitOne();
 
-		var _nonAI = manager.NonAI;
-		lock(lockObject)
+		var nonAI = _manager.NonAI;
+		lock(_lockObject)
 		{
 			while(true)
 			{
-				threadEvent.WaitOne();
+				_threadEvent.WaitOne();
 
-				Render(_nonAI);
-				manager.CurrentPlayer.Play(Render);
+				Render(nonAI);
+				_manager.CurrentPlayer.Play(Render);
 
-				if(manager.GameOver)
+				if(_manager.RoundOver)
 				{
 					break;
 				}
 
-				manager.NextPlayer();
+				_manager.NextPlayer();
 			}
 		}
-		if(manager.AllPlayers().Any(x => x.Score > 500))
+		if(_manager.AllPlayers().Any(x => x.Score >= 500))
 		{
 			return;
 		}

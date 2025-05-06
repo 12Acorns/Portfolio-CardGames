@@ -10,24 +10,29 @@ namespace GameOne.Game;
 
 internal sealed class RoundManager
 {
-	public RoundManager(CardDeck _deck, int _playerCount, int _startingCards)
+	public RoundManager(CardDeck _deck, int _playerCount, int _startingCards, bool _aiOnly = false)
 	{
 		PickupDeck = _deck;
+		AiOnlyGame = _aiOnly;
 		DiscardPile = new CardDeck([], RandomizerFactory.Get(RandomizerType.None), PickupDeck.Cards.Length);
 		players = CreateAndGivePlayersCards(_playerCount, _startingCards);
 
-		NonAI = players.FirstOrDefault(x => x.GetType() == typeof(GamePlayer)) ?? throw new NullReferenceException("No Non-Ai player");
+		if(!AiOnlyGame)
+		{
+			NonAI = players.FirstOrDefault(x => x.GetType() == typeof(GamePlayer)) ?? throw new NullReferenceException("No Non-Ai player");
+		}
+		else
+		{
+			NonAI = default!;
+		}
 		CurrentPlayer = players[0];
-
 		playersLength = (byte)players.Length;
 
 		if(!PickupDeck.TryNextFree(out var _card))
 		{
 			throw new Exception("Failed to init, try adding more cards");
 		}
-
 		DiscardPile.Add(_card);
-
 		// Make sure first playing card is NUMERICTYPE
 		while(_card.Description.Type == Globals.SpecialType)
 		{
@@ -35,13 +40,14 @@ internal sealed class RoundManager
 			{
 				throw new Exception("Failed to init, try adding more cards");
 			}
-
 			DiscardPile.Add(_card);
 		}
 	}
 
+	public bool AiOnlyGame { get; }
 	public Action<Player> OnPlay { get; set; } = new(x => { });
 	public bool GameOver { get; private set; } = false;
+	public bool RoundOver { get; private set; } = false;
 	public Player CurrentPlayer { get; private set; }
 	public Player NonAI { get; private set; }
 
@@ -55,14 +61,14 @@ internal sealed class RoundManager
 	private int skipPlayerCount;
 	private bool reverseOrder;
 
-	public void NewGame(int _startingCards)
+	public void NewRound(int _cardsPerPlayer)
 	{
 		playerIndex = 0;
 
 		for(int i = PickupDeck.Cards.Length; i > 0; i++)
 		{
-			PickupDeck.TryNextFree(out var _pickupCard);
-			if(_pickupCard.Data.SubType == Globals.)
+			PickupDeck.TryNextFree(out _);
+			ResetWildColour();
 		}
 
 		PickupDeck.ShufflePutDown();
@@ -70,14 +76,11 @@ internal sealed class RoundManager
 		for(int i = 0; i < players.Length; i++)
 		{
 			players[i].Clear();
-
-
+			players[i].GiveCards(CreatePlayersCards(_cardsPerPlayer));
 		}
 
 		PickupDeck.TryNextFree(out var _card);
-
 		DiscardPile.Add(_card);
-
 		// Make sure first playing card is NUMERICTYPE
 		while(_card.Description.Type == Globals.SpecialType)
 		{
@@ -85,9 +88,10 @@ internal sealed class RoundManager
 			{
 				throw new Exception("Failed to init, try adding more cards");
 			}
-
 			DiscardPile.Add(_card);
 		}
+
+		RoundOver = false;
 	}
 
 	public void EvaluatePostPlay()
@@ -100,8 +104,8 @@ internal sealed class RoundManager
 		{
 			return;
 		}
-		_player.Score += AllPlayers().Where(x => x != _player).Sum(x => x.SumOfCardsScores);
-		GameOver = true;
+		_player.Score += AllPlayers().Sum(x => x.SumOfCardsScores);
+		RoundOver = true;
 	}
 	public ReadOnlySpan<GameCard> GetMultipleCards(int _amount)
 	{
@@ -126,7 +130,6 @@ internal sealed class RoundManager
 			Shuffle();
 			PickupDeck.TryNextFree(out _card);
 		}
-
 		return _card;
 	}
 	public void SetWildColour(RGBColour _colour)
@@ -136,9 +139,8 @@ internal sealed class RoundManager
 			_colour = RGBColour.GetClassicColour((CardColour)Random.Shared.Next(4));
 			Console.WriteLine($"Invalid Colour, Got: {RGBColour.None.Name}, Now: {_colour.Name}");
 		}
-
 		var _card = DiscardPile.Peek();
-		if(_card.Data.SubType != Globals.WildSubType && _card.Data.SubType != Globals.WildPlusFourSubType)
+		if(!_card.Data.SubType.IsWild())
 		{
 			return;
 		}
@@ -158,7 +160,6 @@ internal sealed class RoundManager
 		{
 			_cards[i].PutDown();
 		}
-
 		DiscardPile.AddRange(_cards);
 	}
 	public bool AddToDiscard(GameCard _card)
@@ -167,9 +168,7 @@ internal sealed class RoundManager
 		{
 			return false;
 		}
-
 		_card.PutDown();
-
 		DiscardPile.Add(_card);
 		return true;
 	}
@@ -179,29 +178,21 @@ internal sealed class RoundManager
 	public Player NextPlayer()
 	{
 		var _player = CurrentPlayer;
-		if(reverseOrder)
-		{
-			var _minus = playerIndex - 1;
-			if(_minus < 0)
-			{
-				_minus = playersLength - 1;
-			}
-			playerIndex = (byte)(_minus % playersLength);
-		}
-		else
-		{
-			playerIndex = (byte)((playerIndex + 1) % playersLength);
-		}
-
+		var unwrappedIndex = reverseOrder ? playerIndex + playersLength - 1 : playerIndex + 1;
+		playerIndex = (byte)(unwrappedIndex % playersLength);
 		if(skipPlayerCount > 0)
 		{
 			skipPlayerCount--;
 			_player = NextPlayer();
 		}
-
 		CurrentPlayer = players[playerIndex];
 		return _player;
 	}
+	/// <summary>
+	/// Return nth player in direction of play
+	/// </summary>
+	/// <param name="_offset"></param>
+	/// <returns></returns>
 	public Player PeekPlayer(int _offset)
 	{
 		int _index;
@@ -213,16 +204,16 @@ internal sealed class RoundManager
 		{
 			_offset = Math.Abs(_offset);
 			_modValue = playerIndex - _offset;
-			while(_modValue < 0)
-			{
-				_modValue = playersLength + _modValue;
-			}
 		}
 		else
 		{
 			_modValue = playerIndex + _offset;
 		}
-		_index = (byte)(_modValue % playersLength);
+		while(_modValue < 0)
+		{
+			_modValue = playersLength + _modValue;
+		}
+		_index = ((byte)_modValue) % playersLength;
 		return players[_index];
 	}
 	public bool ExecuteCardBehaviour(GameCard _card)
@@ -264,14 +255,8 @@ internal sealed class RoundManager
 		}
 		throw new NotSupportedException(nameof(_subType) + " is not a supported type");
 	}
-	public IEnumerable<Player> AllPlayers()
-	{
-		return players;
-	}
-	private void IncrementSkipCount()
-	{
-		skipPlayerCount++;
-	}
+	public IEnumerable<Player> AllPlayers() => players;
+	private void IncrementSkipCount() => skipPlayerCount++;
 	private void Shuffle()
 	{
 		PickupDeck.Shuffle();
@@ -298,26 +283,39 @@ internal sealed class RoundManager
 	private Player[] CreateAndGivePlayersCards(int _playerCount, int _cardsPerPlayer)
 	{
 		var _players = new Player[_playerCount];
-
 		for(int i = 0; i < _players.Length; i++)
 		{
-			var _cards = new GameCard[_cardsPerPlayer];
-			for(int j = 0; j < _cardsPerPlayer; j++)
-			{
-				if(!PickupDeck.TryNextFree(out var _card))
-				{
-					throw new Exception("Reached end of deck before game could start, try increasing deck size");
-				}
-
-				_cards[j] = _card;
-			}
+			var _cards = CreatePlayersCards(_cardsPerPlayer);
 			_players[i] = i switch
 			{
-				0 => new GamePlayer("Player", _cards, this),
+				0 => AiOnlyGame ? new GameAI($"AI {i}", _cards, this) :  new GamePlayer("Player", _cards, this),
 				> 0 => new GameAI($"AI {i}", _cards, this),
 				_ => throw new IndexOutOfRangeException(nameof(i))
 			};
 		}
 		return _players;
+	}
+	private GameCard[] CreatePlayersCards(int _cardsPerPlayer)
+	{
+		var _cards = new GameCard[_cardsPerPlayer];
+		for(int j = 0; j < _cardsPerPlayer; j++)
+		{
+			if(!PickupDeck.TryNextFree(out var _card))
+			{
+				throw new Exception("Reached end of deck before game could start, try increasing deck size");
+			}
+			_cards[j] = _card;
+		}
+		return _cards;
+	}
+	private void ResetWildColour()
+	{
+		var _card = DiscardPile.Peek();
+		if(!_card.Data.SubType.IsWild())
+		{
+			return;
+		}
+		_card.Description = _card.Description with { Colour = RGBColour.None };
+		DiscardPile.SetCurrentCard(_card);
 	}
 }

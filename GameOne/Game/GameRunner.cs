@@ -9,6 +9,7 @@ public sealed class GameRunner : IGame
 	public void Run()
 	{
 		var _manager = new GameManager();
+		
 
 		_manager.Run();
 	}

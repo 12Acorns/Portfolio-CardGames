@@ -33,7 +33,7 @@ internal static class CardExtensions
 	}.ToFrozenDictionary();
 	private static readonly FrozenDictionary<CardSubType, string> nameMappingTable = new Dictionary<CardSubType, string>()
 	{
-				// Numeric
+		// Numeric
 		{ Globals.ZeroSubType, "Zero" },
 		{ Globals.OneSubType, "One" },
 		{ Globals.TwoSubType, "Two" },
@@ -85,24 +85,24 @@ internal static class CardExtensions
 			|| _card.Data.SubType == Globals.WildPlusFourSubType;
 	}
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool CanPlay(this GameCard _card, CardDeck _deck, bool _strictPlay = true)
-	{
-		return _card.CanPlay(_deck.Peek(), _strictPlay);
-	}
+	public static bool CanPlay(this GameCard _card, CardDeck _deck, bool _strictPlay = true) =>
+		_card.CanPlay(_deck.Peek(), _strictPlay);
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsNumercic(this CardSubType _subType)
-	{
-		return _subType == Globals.ZeroSubType 
+	public static bool IsNumercic(this CardSubType _subType) => 
+			   _subType == Globals.ZeroSubType
 			|| _subType == Globals.OneSubType
-			|| _subType == Globals.TwoSubType 
+			|| _subType == Globals.TwoSubType
 			|| _subType == Globals.ThreeSubType
-			|| _subType == Globals.FourSubType 
+			|| _subType == Globals.FourSubType
 			|| _subType == Globals.FiveSubType
-			|| _subType == Globals.SixSubType 
+			|| _subType == Globals.SixSubType
 			|| _subType == Globals.SevenSubType
-			|| _subType == Globals.EightSubType 
+			|| _subType == Globals.EightSubType
 			|| _subType == Globals.NineSubType;
-	}
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static bool IsWild(this CardSubType _subType) =>
+		_subType == Globals.WildPlusFourSubType ||
+		_subType == Globals.WildSubType;
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static string ReadableNameMapping(this CardSubType _subType)
 	{

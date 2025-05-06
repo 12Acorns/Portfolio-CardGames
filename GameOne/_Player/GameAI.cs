@@ -31,8 +31,8 @@ internal sealed class GameAI : Player
 		};
 	}
 
-	private delegate bool defaultAction(Predicate<GameCard> _indexPredicate, out bool _colourChange);
-	private readonly defaultAction defaultCardAction;
+	private delegate bool DefaultAction(Predicate<GameCard> _indexPredicate, out bool _colourChange);
+	private readonly DefaultAction defaultCardAction;
 
 	private readonly Dictionary<Player, List<GameCard>> playerCardMap = new(3);
 
@@ -49,10 +49,11 @@ internal sealed class GameAI : Player
 			.Select(x => (x.Key, x.Count()))
 			.OrderBy(x => x.Item2);
 
+		bool _colourChange;
 		// Have no info on played cards for next player, so make a guess
 		if(!playerCardMap.TryGetValue(_nextPlayer, out var _cardHistory))
 		{
-			defaultCardAction(x => x.CanPlay(_discardCard, false), out bool _colourChange);
+			defaultCardAction(x => x.CanPlay(_discardCard, false), out _colourChange);
 			if(!_colourChange)
 			{
 				return;
@@ -76,6 +77,16 @@ internal sealed class GameAI : Player
 		{
 			return;
 		}
+		// If not able to play based on special card play restrictions, try to play any special
+		if(!defaultCardAction(x => x.CanPlay(_discardCard, false), out _colourChange))
+		{
+			return;
+		}
+		if(!_colourChange)
+		{
+			return;
+		}
+		manager.SetWildColour(_selfOrdered.FirstOrDefault().Key);
 	}
 
 	#region Behaviour
@@ -88,16 +99,21 @@ internal sealed class GameAI : Player
 	private bool Numeric(Player _nextPlayer, GameCard _discardCard, 
 		IOrderedEnumerable<(RGBColour, int)> _ordered)
 	{
-		return defaultCardAction(x => x.CanPlay(_discardCard, false), out _);
+		return defaultCardAction(x => x.CanPlay(_discardCard, false) && x.Description.Type == Globals.NumericType, out _);
 	}
 	#endregion
 	#region Special
 	private bool PlaySpecial(Player _nextPlayer, GameCard _discardCard, 
 		IOrderedEnumerable<(RGBColour, int)> _ordered, IOrderedEnumerable<(RGBColour, int)> _selfOrdered)
 	{
-		return Wild(_nextPlayer, _ordered, _selfOrdered, x => x.Data.SubType == Globals.WildPlusFourSubType)
+		return 
+			// Major
+			   Wild(_nextPlayer, _ordered, _selfOrdered, x => x.Data.SubType == Globals.WildPlusFourSubType)
 			|| Wild(_nextPlayer, _ordered, _selfOrdered, x => x.Data.SubType == Globals.WildSubType)
-			|| Reverse(_nextPlayer, _discardCard) || MinorSpecial(_nextPlayer, _discardCard, Globals.PlusTwoSubType, 3)
+			|| Reverse(_nextPlayer, _discardCard)
+
+			// Minor
+			|| MinorSpecial(_nextPlayer, _discardCard, Globals.PlusTwoSubType, 3)
 			|| MinorSpecial(_nextPlayer, _discardCard, Globals.SkipSubType, 4);
 	}
 	private bool Wild(Player _nextPlayer, IOrderedEnumerable<(RGBColour, int)> _ordered,
@@ -129,7 +145,7 @@ internal sealed class GameAI : Player
 			_finalColour = _selfColour;
 			break;
 		}
-		if(!_finalColour.HasValue)
+		if(_finalColour == null || _finalColour.Value == RGBColour.None)
 		{
 			_finalColour = _selfOrdered.First().Item1;
 		}
@@ -142,18 +158,22 @@ internal sealed class GameAI : Player
 	{
 		var _previousPlayer = manager.PeekPlayer(-1);
 
-		if(!playerCardMap.TryGetValue(_previousPlayer, out var _cardHistory))
+		if(!playerCardMap.TryGetValue(_previousPlayer, out var _previousPlayerCardHistory))
+		{
+			return false;
+		}
+		if(!playerCardMap.TryGetValue(_nextPlayer, out var _nextPlayerCardHistory))
 		{
 			return false;
 		}
 		// IE, Plus Two, block, reverse, PlusFourWild
-		var _previousPlayerDangerCards = _previousPlayer.Cards
+		var _previousPlayerDangerCards = _previousPlayerCardHistory
 			.Sum(x =>   (x.Data.SubType == Globals.PlusTwoSubType
 					  || x.Data.SubType == Globals.SkipSubType
 					  || x.Data.SubType == Globals.ReverseSubType
 					  || x.Data.SubType == Globals.WildPlusFourSubType)
 					   ? 1 : 0);
-		var _nextPlayerDangerCards = _nextPlayer.Cards
+		var _nextPlayerDangerCards = _nextPlayerCardHistory
 			.Sum(x =>   (x.Data.SubType == Globals.PlusTwoSubType
 					  || x.Data.SubType == Globals.SkipSubType
 					  || x.Data.SubType == Globals.ReverseSubType

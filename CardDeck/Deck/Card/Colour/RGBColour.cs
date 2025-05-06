@@ -74,7 +74,7 @@ public readonly struct RGBColour
 
 	public static bool operator ==(RGBColour _left, RGBColour _right)
 	{
-		return _left.Equals(_right);
+		return _left.GetHashCode() == _right.GetHashCode();
 	}
 
 	public static bool operator !=(RGBColour _left, RGBColour _right)

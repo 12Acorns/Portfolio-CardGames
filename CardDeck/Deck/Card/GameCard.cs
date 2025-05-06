@@ -11,11 +11,7 @@ public record struct GameCard
 		{
 			throw new ArgumentException($"Member ({_data.SubType}) does not inherit from {_description.Type.TypeName}.");
 		}
-
-		hash = HashCode.Combine(Description.Colour, Data.SubType, Data.Score);
 	}
-
-	private readonly int hash;
 
 	/// <summary>
 	/// Description of the card group
@@ -42,5 +38,5 @@ public record struct GameCard
 		InUse = false;
 	}
 
-	public override readonly int GetHashCode() => hash;
+	public override readonly int GetHashCode() => HashCode.Combine(Description.Colour, Data.SubType, Data.Score);
 }

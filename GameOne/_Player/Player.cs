@@ -64,6 +64,10 @@ internal abstract class Player
 	{
 		get
 		{
+			if(cards.Count is 0)
+			{
+				return 0;
+			}
 			var _score = 0;
 			foreach(var _card in cards)
 			{
@@ -88,7 +92,7 @@ internal abstract class Player
 		var _topCard = manager.PeekDiscardPileTopCard();
 		if(!HasPlayableCard(_topCard))
 		{
-			if(this == manager.NonAI)
+			if(manager.NonAI == this)
 			{
 				Console.WriteLine("Can not play any cards, auto-picked up");
 			}
@@ -138,9 +142,7 @@ internal abstract class Player
 		{
 			throw new Exception("Specified card does not exist in current players hand");
 		}
-
 		_colourChange = manager.ExecuteCardBehaviour(_card);
-
 		return true;
 	}
 	protected abstract void PlayImpl(Action<Player> _render);
@@ -183,10 +185,8 @@ internal abstract class Player
 				break;
 		}
 	}
-	protected bool HasPlayableCard(GameCard _compareTo)
-	{
-		return !cards.TrueForAll(x => !x.CanPlay(_compareTo, false));
-	}
+	protected bool HasPlayableCard(GameCard _compareTo) => 
+		!cards.TrueForAll(x => !x.CanPlay(_compareTo, false));
 	public override string ToString()
 	{
 		return $"Name: {Name}\nScore: {SumOfCardsScores}\n";
