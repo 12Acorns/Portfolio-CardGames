@@ -21,6 +21,9 @@
 
   <ItemGroup>
     <Reference Include="Core">
+      <HintPath>..\lib\ConsoleTextFormatter2.dll</HintPath>
+    </Reference>
+    <Reference Include="Core">
       <HintPath>..\lib\Core.dll</HintPath>
     </Reference>
   </ItemGroup>

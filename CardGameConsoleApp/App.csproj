@@ -39,7 +39,7 @@
 		
 		<Copy SourceFiles="$(SolutionDir)GameOne\$(OutDir)Deck.dll" DestinationFolder="$(TargetDir)Lib" OverwriteReadOnlyFiles="true" SkipUnchangedFiles="false" />
 
-		<Copy SourceFiles="$(SolutionDir)lib\Core.dll" DestinationFolder="$(TargetDir)Lib" OverwriteReadOnlyFiles="true" SkipUnchangedFiles="false" />
+		<Copy SourceFiles="$(SolutionDir)lib\ConsoleTextFormatter2.dll" DestinationFolder="$(TargetDir)Lib" OverwriteReadOnlyFiles="true" SkipUnchangedFiles="false" />
 	</Target>
 
 </Project>
